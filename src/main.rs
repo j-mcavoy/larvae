@@ -1,166 +1,299 @@
-use uom::num_traits::Num;
-use uom::si::quantities::*;
-use uom::si::{self, Quantity};
-use uom::typenum::int::Z0;
-use uom::typenum::marker_traits::Integer;
-
-type Val = f32;
+use std::{collections::HashSet, fmt::Display};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct ParseError;
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct MathErr;
 
-macro_rules! parse_quantity_conditional {
-    ($var:ident, $($quantity:ident)+) => {
-        $(if let Ok(q) = $var.parse::<$quantity<Val>>() {
-            Ok(q)
-        }
-        else
-        )+
-        {
-        Err(ParseError)
+type Val = f64;
+type Dim = i32;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct DimensionError(Dimensions, Dimensions);
+
+type MathResult = Result<(), DimensionError>;
+struct Quantity {
+    value: Val,
+    dimensions: Dimensions,
+    units: Units,
+}
+impl Quantity {
+    fn convert_units(&mut self, units: &Units) {
+        self.value *= self
+            .units
+            .length
+            .conversion_factor()
+            .powi(self.dimensions.length)
+            / units
+                .length
+                .conversion_factor()
+                .powi(self.dimensions.length)
+            * self
+                .units
+                .mass
+                .conversion_factor()
+                .powi(self.dimensions.mass)
+            / units.mass.conversion_factor().powi(self.dimensions.mass);
+    }
+
+    fn neg(&mut self) {
+        self.value = -self.value;
+    }
+
+    fn inv(&mut self) {
+        self.dimensions.inv();
+    }
+
+    fn sub(&mut self, r: &mut Self) -> MathResult {
+        r.inv();
+        self.add(r)
+    }
+
+    fn mul(&mut self, r: &mut Self) {
+        r.convert_units(&self.units);
+        self.value *= r.value;
+        self.dimensions.mul(r.dimensions);
+    }
+    fn add(&mut self, r: &mut Self) -> MathResult {
+        if self.dimensions == r.dimensions {
+            r.convert_units(&self.units);
+            self.value += r.value;
+            Ok(())
+        } else {
+            Err(DimensionError(self.dimensions, r.dimensions))
         }
     }
 }
-fn parse_quantity<
-    L: Integer,
-    M: Integer,
-    T: Integer,
-    I: Integer,
-    Th: Integer,
-    N: Integer,
-    J: Integer,
-    Kind: dyn uom::Kind,
->(
-    x: &str,
-) -> Result<
-    Quantity<
-        si::Dimension<L = L, M = M, T = T, I = I, Th = Th, N = N, J = J, Kind = Kind>,
-        dyn si::Units<
-            Val,
-            length = si::length::meter,
-            mass = si::mass::kilogram,
-            time = si::time::second,
-            electric_current = si::electric_current::ampere,
-            thermodynamic_temperature = si::thermodynamic_temperature::kelvin,
-            amount_of_substance = si::amount_of_substance::mole,
-            luminous_intensity = si::luminous_intensity::candela,
-        >,
-        Val,
-    >,
-    ParseError,
-> {
-    parse_quantity_conditional!(x,
-            Acceleration
-            AmountOfSubstance
-            Angle
-            AngularAcceleration
-            AngularJerk
-            AngularVelocity
-            Area
-            AvailableEnergy
-            Capacitance
-            CatalyticActivity
-            CatalyticActivityConcentration
-            Curvature
-            ElectricCharge
-            ElectricCurrent
-            ElectricPotential
-            ElectricalConductance
-            ElectricalResistance
-            Energy
-            Force
-            Frequency
-            HeatCapacity
-            HeatFluxDensity
-            HeatTransfer
-            Inductance
-            Information
-            InformationRate
-            Jerk
-            Length
-            Luminance
-            LuminousIntensity
-            MagneticFlux
-            MagneticFluxDensity
-            Mass
-            MassConcentration
-            MassDensity
-            MassRate
-            MolarConcentration
-            MolarEnergy
-            MolarMass
-            Momentum
-            Power
-            Pressure
-            RadiantExposure
-            Ratio
-            SolidAngle
-            SpecificHeatCapacity
-            TemperatureInterval
-            ThermalConductivity
-            ThermodynamicTemperature
-            Time
-            Torque
-            Velocity
-            Volume
-            VolumeRate)
+impl Display for Quantity {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} {} {}",
+            self.value,
+            if self.dimensions.length != 0 {
+                format!(
+                    "{}{}",
+                    self.units.length.abbrev(),
+                    if self.dimensions.length == 1 {
+                        "".to_string()
+                    } else {
+                        format!("^{}", self.dimensions.length)
+                    }
+                )
+            } else {
+                "".to_string()
+            },
+            if self.dimensions.mass != 0 {
+                format!(
+                    "{}{}",
+                    self.units.mass.abbrev(),
+                    if self.dimensions.mass == 1 {
+                        "".to_string()
+                    } else {
+                        format!("^{}", self.dimensions.mass)
+                    }
+                )
+            } else {
+                "".to_string()
+            }
+        )
+    }
+}
+// base units stored in si
+
+// i.e. m/s^2 has length: 1, time: 2
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Dimensions {
+    length: Dim,
+    mass: Dim,
+    //    time: Dim,
+    //    current: Dim,
+    //    temprature: Dim,
+    //    luminous_intensity: Dim,
+    //    money: Dim,
+}
+impl Dimensions {
+    pub fn inv(&mut self) {
+        self.length = -self.length;
+        self.mass = -self.mass;
+    }
+    pub fn mul(&mut self, r: Self) {
+        self.length += r.length;
+        self.mass += r.mass;
+    }
+}
+struct Units {
+    length: Box<dyn Length>,
+    mass: Box<dyn Mass>,
+    //  time: Box<dyn Time>,
+    //  current: Box<dyn Current>,
+    //  temprature: Box<dyn Temperature>,
+    //  luminous_intensity: Box<dyn LuminousIntensity>,
+    //  money: Box<dyn Money>,
 }
 
-fn main() {
-    println!("{:?}", parse_quantity("77 m"));
+trait Unit {
+    fn conversion_factor(&self) -> Val {
+        1.
+    }
+    fn abbrev(&self) -> &'static str;
+    fn name(&self) -> &'static str;
+    fn symbol(&self) -> &'static str;
 }
+impl std::fmt::Display for dyn Unit {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(fmt, "{}", self.symbol())
+    }
+}
+trait Length: Unit {}
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Meter;
+impl Length for Meter {}
+impl Unit for Meter {
+    fn abbrev(&self) -> &'static str {
+        "m"
+    }
+    fn name(&self) -> &'static str {
+        "meter"
+    }
+    fn symbol(&self) -> &'static str {
+        "m"
+    }
+}
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct KiloMeter;
+impl Length for KiloMeter {}
+impl Unit for KiloMeter {
+    fn abbrev(&self) -> &'static str {
+        "km"
+    }
+    fn name(&self) -> &'static str {
+        "kilometer"
+    }
+    fn symbol(&self) -> &'static str {
+        "km"
+    }
+    fn conversion_factor(&self) -> Val {
+        1000.
+    }
+}
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Inch;
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Foot;
 
-//fn add(lq: Q, rq: Q) -> Result<Q, MathErr> {
-//    use Q::*;
-//
-//    match (lq, rq) {
-//        (Mass(r), Mass(l)) => Ok(Mass(r + l)),
-//        (_, _) => Err(MathErr),
-//    }
-//}
+// TODO: change dyn impl to enums for each dimension
 
-//fn multiply(lq: Q, rq: Q) -> Result<Q, MathErr> {
-//    use Q::*;
-//
-//    match (lq, rq) {
-//        (Mass(r), Mass(l)) => {
-//
-//        let x = }
-//        (_, _) => Err(MathErr),
-//    }
-//}
+trait Mass: Unit {}
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct KiloGram;
+impl Unit for KiloGram {
+    fn abbrev(&self) -> &'static str {
+        "kg"
+    }
+    fn name(&self) -> &'static str {
+        "kilogram"
+    }
+    fn symbol(&self) -> &'static str {
+        "kg"
+    }
+}
+impl Mass for KiloGram {}
 
-/*
+fn main() {}
+
+#[cfg(test)]
 mod test {
+
     use super::*;
-
-    use uom::si::acceleration::meter_per_second_squared;
-    use uom::si::acceleration::Acceleration as acceleration;
-    use uom::si::mass::kilogram;
-    use uom::si::mass::Mass as mass;
-
-    #[test]
-    pub fn test_parse_quantity() {
-        assert_eq!(
-            parse_quantity("123 kg").unwrap(),
-            Q::Mass(mass::new::<kilogram>(123.))
-        );
-    }
     #[test]
     pub fn test_add() {
-        let result = add(
-            Q::Mass(mass::new::<kilogram>(100.)),
-            Q::Mass(mass::new::<kilogram>(23.)),
-        )
-        .unwrap();
-        assert_eq!(result, Q::Mass(mass::new::<kilogram>(123.)));
-        let result = add(
-            Q::Acceleration(acceleration::new::<meter_per_second_squared>(100.)),
-            Q::Mass(mass::new::<kilogram>(23.)),
-        );
-        assert_eq!(result, Err(MathErr));
+        let mut m = Quantity {
+            units: Units {
+                length: Box::new(Meter),
+                mass: Box::new(KiloGram),
+            },
+            value: 2.,
+            dimensions: Dimensions { length: 2, mass: 0 },
+        };
+        let mut n = Quantity {
+            units: Units {
+                length: Box::new(KiloMeter),
+                mass: Box::new(KiloGram),
+            },
+            value: -20.,
+            dimensions: Dimensions { length: 2, mass: 0 },
+        };
+        m.add(&mut n).unwrap();
+        assert_eq!(m.value, -19999998.);
+
+        let mut m = Quantity {
+            units: Units {
+                length: Box::new(Meter),
+                mass: Box::new(KiloGram),
+            },
+            value: 2.,
+            dimensions: Dimensions {
+                length: -2,
+                mass: 0,
+            },
+        };
+        let mut n = Quantity {
+            units: Units {
+                length: Box::new(KiloMeter),
+                mass: Box::new(KiloGram),
+            },
+            value: -20.,
+            dimensions: Dimensions {
+                length: -2,
+                mass: 0,
+            },
+        };
+        m.add(&mut n).unwrap();
+        assert_eq!(m.value, 1.99998);
+    }
+
+    #[test]
+    #[should_panic]
+    pub fn test_incompatible_dimensions() {
+        let mut m = Quantity {
+            units: Units {
+                length: Box::new(Meter),
+                mass: Box::new(KiloGram),
+            },
+            value: 2.,
+            dimensions: Dimensions { length: 3, mass: 1 },
+        };
+        let mut n = Quantity {
+            units: Units {
+                length: Box::new(KiloMeter),
+                mass: Box::new(KiloGram),
+            },
+            value: -20.,
+            dimensions: Dimensions { length: 1, mass: 3 },
+        };
+        m.add(&mut n).unwrap();
+    }
+    #[test]
+    pub fn test_multiply() {
+        let mut m = Quantity {
+            units: Units {
+                length: Box::new(Meter),
+                mass: Box::new(KiloGram),
+            },
+            value: 5.,
+            dimensions: Dimensions { length: 1, mass: 0 },
+        };
+        let mut n = Quantity {
+            units: Units {
+                length: Box::new(KiloMeter),
+                mass: Box::new(KiloGram),
+            },
+            value: 5.,
+            dimensions: Dimensions { length: 1, mass: 0 },
+        };
+        m.mul(&mut n);
+        assert_eq!(m.value, 25000.);
+        assert_eq!(m.dimensions.length, 2);
     }
 }
-*/
