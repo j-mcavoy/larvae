@@ -1,44 +1,90 @@
-use std::num::ParseFloatError;
+use std::cell::RefCell;
 
-use regex::Regex;
+fn build_grammar() -> earlgrey::Grammar {
+    use std::str::FromStr;
+    earlgrey::GrammarBuilder::default()
+        .nonterm("expr")
+        .nonterm("term")
+        .nonterm("factor")
+        .nonterm("power")
+        .nonterm("ufact")
+        .nonterm("group")
+        .nonterm("func")
+        .nonterm("args")
+        .terminal("[n]", |n| f64::from_str(n).is_ok())
+        .terminal("+", |n| n == "+")
+        .terminal("-", |n| n == "-")
+        .terminal("*", |n| n == "*")
+        .terminal("/", |n| n == "/")
+        .terminal("%", |n| n == "%")
+        .terminal("^", |n| n == "^")
+        .terminal("!", |n| n == "!")
+        .terminal("(", |n| n == "(")
+        .terminal(")", |n| n == ")")
+        .rule("expr", &["term"])
+        .rule("expr", &["expr", "+", "term"])
+        .rule("expr", &["expr", "-", "term"])
+        .rule("term", &["factor"])
+        .rule("term", &["term", "*", "factor"])
+        .rule("term", &["term", "/", "factor"])
+        .rule("term", &["term", "%", "factor"])
+        .rule("factor", &["power"])
+        .rule("factor", &["-", "factor"])
+        .rule("power", &["ufact"])
+        .rule("power", &["ufact", "^", "factor"])
+        .rule("ufact", &["group"])
+        .rule("ufact", &["ufact", "!"])
+        .rule("group", &["[n]"])
+        .rule("group", &["(", "expr", ")"])
+        .into_grammar("expr")
+        .expect("Bad Gramar")
+}
 
-use super::quantity::*;
+struct Tokenizer<I: Iterator<Item = char>>(lexers::Scanner<I>);
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-struct ParseError;
-
-//impl FromResidual<Option<Infallible>> for ParseError {
-//    fn from_residual(residual: Option<Infallible>) -> Self {
-//        ParseError {}
-//    }
-//}
-impl From<ParseFloatError> for ParseError {
-    fn from(_: ParseFloatError) -> Self {
-        ParseError {}
+impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
+    type Item = String;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.scan_whitespace();
+        self.0
+            .scan_math_op()
+            .or_else(|| self.0.scan_number())
+            .or_else(|| self.0.scan_identifier())
     }
 }
-impl From<regex::Error> for ParseError {
-    fn from(_: regex::Error) -> Self {
-        ParseError {}
-    }
+
+fn tokenizer<I: Iterator<Item = char>>(input: I) -> Tokenizer<I> {
+    Tokenizer(lexers::Scanner::new(input))
 }
 
-// s: "1.234 m"
-// s: "1.234m"
-// s: "1m"
-// s: "1 m"
-// s: "1e3 m"
-// s: "1e3m"
-fn parse_quantity(s: String) -> Result<Quantity, ParseError> {
-    let re = Regex::new(r"\d+\.?|e?\d*").unwrap();
-    let mut matches = re.find_iter(&s);
-    if let Some(value) = matches.next() {
-        if let Ok(_) = value.as_str().parse::<StorageType>() {
-            Ok(Quantity::default())
-        } else {
-            Err(ParseError)
-        }
-    } else {
-        Err(ParseError)
+fn gamma(x: f64) -> f64 {
+    #[link(name = "m")]
+    extern "C" {
+        fn tgamma(x: f64) -> f64;
     }
+    unsafe { tgamma(x) }
+}
+
+fn semanter<'a>() -> earlgrey::EarleyForest<'a, f64> {
+    use std::str::FromStr;
+    let mut ev = earlgrey::EarleyForest::new(|symbol, token| match symbol {
+        "[n]" => f64::from_str(token).unwrap(),
+        _ => 0.0,
+    });
+    ev.action("expr -> term", |n| n[0]);
+    ev.action("expr -> expr + term", |n| n[0] + n[2]);
+    ev.action("expr -> expr - term", |n| n[0] - n[2]);
+    ev.action("term -> factor", |n| n[0]);
+    ev.action("term -> term * factor", |n| n[0] * n[2]);
+    ev.action("term -> term / factor", |n| n[0] / n[2]);
+    ev.action("term -> term % factor", |n| n[0] % n[2]);
+    ev.action("factor -> power", |n| n[0]);
+    ev.action("factor -> - factor", |n| -n[1]);
+    ev.action("power -> ufact", |n| n[0]);
+    ev.action("power -> ufact ^ factor", |n| n[0].powf(n[2]));
+    ev.action("ufact -> group", |n| n[0]);
+    ev.action("ufact -> ufact !", |n| gamma(n[0] + 1.0));
+    ev.action("group -> [n]", |n| n[0]);
+    ev.action("group -> ( expr )", |n| n[1]);
+    ev
 }
