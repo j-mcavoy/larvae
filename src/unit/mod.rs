@@ -3,6 +3,8 @@ pub mod length;
 pub mod mass;
 pub mod time;
 
+use std::fmt::Display;
+
 use super::dimension::Dimensions;
 use super::quantity::StorageType;
 use length::Length;
@@ -33,6 +35,11 @@ pub struct Units {
     //  temprature: Box<dyn Temperature>,
     //  luminous_intensity: Box<dyn LuminousIntensity>,
     //  money: Box<dyn Money>,
+}
+impl Display for Units {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 impl Units {
     pub const fn SI() -> Self {

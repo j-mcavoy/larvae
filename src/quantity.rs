@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::ops::Add;
 
 use super::dimension::*;
 use super::unit::*;
@@ -11,7 +12,32 @@ pub struct Quantity {
     dimensions: Dimensions,
     units: Units,
 }
+impl Add<Quantity> for Quantity {
+    type Output = Quantity;
+    fn add(self, rhs: Quantity) -> Self::Output {
+        self.add(rhs)
+    }
+}
 impl Quantity {
+    pub fn new(value: StorageType, dimensions: Dimensions, units: Units) -> Self {
+        Quantity {
+            value,
+            dimensions,
+            units,
+        }
+    }
+    pub fn from_value(value: StorageType) -> Self {
+        Quantity {
+            value,
+            ..Default::default()
+        }
+    }
+    pub fn from_units(units: Units) -> Self {
+        Quantity {
+            units,
+            ..Default::default()
+        }
+    }
     pub fn convert_units(&self, units: &Units) -> Self {
         Self {
             units: *units,
