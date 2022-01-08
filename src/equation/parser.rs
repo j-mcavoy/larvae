@@ -57,7 +57,6 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     ev.action("units -> units [*] units", |n| n[0].mul(&n[2]));
     ev.action("units -> units [/] units", |n| n[0].mul(&n[1].inv()));
     ev.action("quantity -> num units", |n| {
-        println!("{:?}", n);
         Quantity::new(n[0].value, n[1].dimensions, n[1].units)
     });
     ev.action("quantity -> num", |n| n[0]);
@@ -80,6 +79,7 @@ fn symbol_match(symbol: &str, token: &str) -> Quantity {
             if let Some(q) = UNITS_LOOKUP.get(token) {
                 *q
             } else {
+                println!("invalid unit");
                 Quantity::default()
             }
         }

@@ -34,4 +34,14 @@ impl Unit for Mass {
             _KiloGram => 1.,
         }
     }
+    fn quantity(&self) -> Quantity {
+        Quantity {
+            value: self.conversion_factor(),
+            dimensions: self.dimensions(),
+            units: Units {
+                mass: *self,
+                ..Default::default()
+            },
+        }
+    }
 }

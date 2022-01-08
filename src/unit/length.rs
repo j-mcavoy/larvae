@@ -37,4 +37,14 @@ impl Unit for Length {
             KiloMeter => 1e3,
         }
     }
+    fn quantity(&self) -> Quantity {
+        Quantity {
+            value: self.conversion_factor(),
+            dimensions: self.dimensions(),
+            units: Units {
+                length: *self,
+                ..Default::default()
+            },
+        }
+    }
 }
