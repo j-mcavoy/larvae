@@ -63,7 +63,7 @@ impl Quantity {
             value: self.value.powf(x),
         }
     }
-    fn inv(&self) -> Self {
+    pub fn inv(&self) -> Self {
         self.clone().pow(-1.)
     }
 
