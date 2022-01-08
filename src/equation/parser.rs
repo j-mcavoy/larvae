@@ -1,12 +1,8 @@
-use std::cell::RefCell;
-
-use nom::number::complete::double;
-use regex::{Regex, RegexBuilder};
+use std::str::SplitWhitespace;
 
 use crate::{
-    dimension::{Dimensions, StorageType},
     quantity::Quantity,
-    unit::{length::Length, Unit, Units, UNITS_LOOKUP},
+    unit::{Unit, UNITS_LOOKUP},
 };
 
 static UNITS: &'static [&str] = &["m"];
@@ -75,7 +71,6 @@ fn symbol_match(symbol: &str, token: &str) -> Quantity {
     match symbol {
         "num" => Quantity::from_value(token.parse().unwrap()),
         "unit" => {
-            let mut q = Quantity::default();
             if let Some(q) = UNITS_LOOKUP.get(token) {
                 *q
             } else {
@@ -87,8 +82,17 @@ fn symbol_match(symbol: &str, token: &str) -> Quantity {
     }
 }
 
+pub fn tokenizer(input: &str) -> SplitWhitespace {
+    input.split_whitespace()
+}
+
 #[cfg(test)]
 mod test {
+    use crate::{
+        dimension::Dimensions,
+        unit::{length::Length, Units},
+    };
+
     use super::*;
     #[test]
     pub fn test_parse_dimunits() {

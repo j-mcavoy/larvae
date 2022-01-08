@@ -1,6 +1,6 @@
 use super::*;
 
-use Mass::*;
+
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Mass {

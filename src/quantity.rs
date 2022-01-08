@@ -96,12 +96,12 @@ impl Display for Quantity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{} {} {}",
+            "{} {} {} {}",
             self.value,
             if self.dimensions.length != 0. {
                 format!(
                     "{}{}",
-                    self.units.length.abbrev(),
+                    self.units.length.symbol(),
                     if self.dimensions.length == 1. {
                         "".to_string()
                     } else {
@@ -114,11 +114,24 @@ impl Display for Quantity {
             if self.dimensions.mass != 0. {
                 format!(
                     "{}{}",
-                    self.units.mass.abbrev(),
+                    self.units.mass.symbol(),
                     if self.dimensions.mass == 1.0 {
                         "".to_string()
                     } else {
                         format!("^{}", self.dimensions.mass)
+                    }
+                )
+            } else {
+                "".to_string()
+            },
+            if self.dimensions.time != 0. {
+                format!(
+                    "{}{}",
+                    self.units.time.symbol(),
+                    if self.dimensions.time == 1.0 {
+                        "".to_string()
+                    } else {
+                        format!("^{}", self.dimensions.time)
                     }
                 )
             } else {
@@ -133,7 +146,7 @@ mod test {
 
     use super::*;
     use crate::unit::length::Length::*;
-    use crate::unit::mass::Mass::*;
+    
     use crate::unit::Units;
 
     #[test]
@@ -243,7 +256,7 @@ mod test {
                 ..Default::default()
             },
         };
-        let mut n = Quantity {
+        let n = Quantity {
             units: Units {
                 length: KiloMeter,
                 ..Units::SI()

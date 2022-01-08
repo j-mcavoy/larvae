@@ -15,22 +15,22 @@ impl Unit for Force {
     }
     fn abbrev(&self) -> &'static str {
         match self {
-            Newton => "N",
+            _Newton => "N",
         }
     }
     fn name(&self) -> &'static str {
         match self {
-            Newton => "newton",
+            _Newton => "newton",
         }
     }
     fn symbol(&self) -> &'static str {
         match self {
-            Newton => "N",
+            _Newton => "N",
         }
     }
     fn conversion_factor(&self) -> StorageType {
         match self {
-            Newton => 1.,
+            _Newton => 1.,
         }
     }
     fn quantity(&self) -> Quantity {
