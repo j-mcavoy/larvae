@@ -15,15 +15,4 @@ use crate::{
 
 const UNITS: &'static [&str] = &["m", "s", "kg"];
 
-fn main() {
-    let input = "1m";
-    let parser = earlgrey::EarleyParser::new(build_grammar());
-    let evaler = semanter();
-    match parser.parse(&mut tokenizer(input.chars())) {
-        Err(e) => println!("Parse err: {:?}", e),
-        Ok(state) => {
-            let val = evaler.eval(&state);
-            println!("{:?}", val);
-        }
-    }
-}
+fn main() {}

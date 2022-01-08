@@ -22,7 +22,21 @@ impl Dimensions {
             time: self.time + x,
         }
     }
-    pub fn mul(&self, r: &Self) -> Self {
+    pub fn add(&self, r: &Self) -> Self {
+        Self {
+            length: self.length + r.length,
+            mass: self.mass + r.mass,
+            time: self.time + r.time,
+        }
+    }
+    pub fn mul(&self, x: StorageType) -> Self {
+        Self {
+            length: self.length * x,
+            mass: self.mass * x,
+            time: self.time * x,
+        }
+    }
+    pub fn _mul(&self, r: &Self) -> Self {
         Self {
             length: self.length + r.length,
             mass: self.mass + r.mass,
@@ -44,7 +58,7 @@ mod test {
         };
 
         assert_eq!(
-            d.mul(&Dimensions {
+            d._mul(&Dimensions {
                 length: -1.,
                 mass: 2.,
                 ..Default::default()

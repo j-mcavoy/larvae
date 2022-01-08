@@ -8,15 +8,9 @@ pub type StorageType = f64;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Quantity {
-    value: StorageType,
-    dimensions: Dimensions,
-    units: Units,
-}
-impl Add<Quantity> for Quantity {
-    type Output = Quantity;
-    fn add(self, rhs: Quantity) -> Self::Output {
-        self.add(rhs)
-    }
+    pub value: StorageType,
+    pub dimensions: Dimensions,
+    pub units: Units,
 }
 impl Quantity {
     pub fn new(value: StorageType, dimensions: Dimensions, units: Units) -> Self {
@@ -81,7 +75,7 @@ impl Quantity {
         let r_converted = r.convert_units(&self.units.clone());
         Self {
             value: self.value * r_converted.value,
-            dimensions: self.dimensions.mul(&r.dimensions),
+            dimensions: self.dimensions._mul(&r.dimensions),
             ..*self
         }
     }
@@ -261,7 +255,7 @@ mod test {
                 ..Default::default()
             },
         };
-        m.add(&mut n).unwrap();
+        let _ = m.add(&n).unwrap();
     }
     #[test]
     pub fn test_multiply() {
