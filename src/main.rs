@@ -28,8 +28,7 @@ fn main() {
                 rl.borrow_mut().add_history_entry(&expr);
                 let val = evaler.eval(&state);
                 if let Ok(v) = val {
-                    println!("{:?}", v);
-                    println!("= {}", v);
+                    println!("{}", v);
                 } else {
                     println!("{:?}", val);
                 }
