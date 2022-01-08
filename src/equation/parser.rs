@@ -1,8 +1,15 @@
 use std::cell::RefCell;
 
-use crate::{quantity::Quantity, unit::length::Length};
+use nom::number::complete::double;
+use regex::{Regex, RegexBuilder};
 
-static UNITS_L: &'static [&str] = &["m"];
+use crate::{
+    dimension::{Dimensions, StorageType},
+    quantity::Quantity,
+    unit::{length::Length, Unit, Units},
+};
+
+static UNITS: &'static [&str] = &["m"];
 
 pub fn build_grammar() -> earlgrey::Grammar {
     use std::str::FromStr;
@@ -10,58 +17,99 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .nonterm("expr")
         .nonterm("quantity")
         .nonterm("units")
-        .terminal("unit_l", |n| UNITS_L.contains(&n))
-        .terminal("value", |n| f64::from_str(n).is_ok())
-        .terminal("^", |n| n == "^")
-        .terminal("+", |n| n == "+")
-        .terminal("-", |n| n == "-")
+        .terminal("[+]", |n| n == "+")
+        .terminal("[^]", |n| n == "^")
+        .terminal("[-]", |n| n == "-")
+        .terminal("[->]", |n| n == "->")
+        .terminal("num", |n| f64::from_str(n).is_ok())
+        .terminal("unit", |n| n == "m" || n == "km")
+        .rule("expr", &["expr", "[->]", "units"])
+        .rule("expr", &["expr", "[+]", "quantity"])
+        .rule("expr", &["expr", "[-]", "quantity"])
         .rule("expr", &["quantity"])
-        .rule("expr", &["expr", "+", "quantity"])
-        .rule("expr", &["expr", "-", "quantity"])
-        .rule("quantity", &["value", "units"])
-        .rule("units", &["unit_l"])
-        .rule("value", &["value"])
+        .rule("num", &["num"])
+        .rule("quantity", &["num", "units"])
+        .rule("quantity", &["num"])
+        .rule("unit", &["unit"])
+        .rule("units", &["unit", "[^]", "num"])
+        .rule("units", &["units", "unit"])
+        .rule("units", &["unit"])
         .into_grammar("expr")
         .expect("Bad Gramar")
 }
-
-pub struct Tokenizer<I: Iterator<Item = char>>(lexers::Scanner<I>);
-
-impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
-    type Item = String;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.scan_whitespace();
-        self.0
-            .scan_math_op()
-            .or_else(|| self.0.scan_number())
-            .or_else(|| self.0.scan_identifier())
-    }
-}
-
-pub fn tokenizer<I: Iterator<Item = char>>(input: I) -> Tokenizer<I> {
-    Tokenizer(lexers::Scanner::new(input))
-}
-
-pub fn gamma(x: f64) -> f64 {
-    #[link(name = "m")]
-    extern "C" {
-        fn tgamma(x: f64) -> f64;
-    }
-    unsafe { tgamma(x) }
-}
-
 pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
-    use std::str::FromStr;
-    let mut ev = earlgrey::EarleyForest::new(|symbol, token| match symbol {
-        "value" => Quantity::from_value(token.parse().unwrap()),
-        "unit_l" => Quantity::from_units(Units {}),
-        //"quantity" => Quantity::from_value(token.parse().unwrap()),
-        _ => Quantity::default(),
+    let mut ev = earlgrey::EarleyForest::new(symbol_match);
+    ev.action("num -> num", |n| n[0]);
+    ev.action("unit -> unit", |n| n[0]);
+    ev.action("units -> unit [^] num", |n| {
+        let mut q = n[0];
+        q.dimensions = n[0].dimensions.mul(n[2].value);
+        q
     });
+    ev.action("units -> unit", |n| n[0]);
+    ev.action("units -> units unit", |n| n[0].mul(&n[1]));
+    ev.action("quantity -> num units", |n| {
+        println!("{:?}", n);
+        Quantity::new(n[0].value, n[1].dimensions, n[1].units)
+    });
+    ev.action("quantity -> num", |n| n[0]);
+    ev.action("expr -> expr [+] quantity", |n| n[0].add(&n[2]).unwrap());
+    ev.action("expr -> expr [-] quantity", |n| n[0].sub(&n[2]).unwrap());
     ev.action("expr -> quantity", |n| n[0]);
-    ev.action("quantity -> value + unit", |n| n[0] + n[2]);
-    //ev.action("expr -> expr - quantity", |n| n[0] - n[2]);
-    //ev.action("expr -> expr - quantity", |n| n[0] - n[2]);
-    //ev.action("expr -> expr - quantity", |n| n[0] - n[2]);
+    ev.action("expr -> expr [->] units", |n| {
+        n[0].convert_units(&n[1].units)
+    });
     ev
+}
+
+fn symbol_match(symbol: &str, token: &str) -> Quantity {
+    match symbol {
+        "num" => Quantity::from_value(token.parse().unwrap()),
+        "unit" => {
+            let mut q = Quantity::default();
+            match token {
+                "km" => {
+                    q.units.length = Length::KiloMeter;
+                    q.dimensions.length = 1.
+                }
+                "m" => {
+                    q.units.length = Length::Meter;
+                    q.dimensions.length = 1.
+                }
+                _ => (),
+            };
+            q
+        }
+        _ => Quantity::default(),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    pub fn test_parse_dimunits() {
+        let input = "1.123 km ^ 2 + 100 m ^ 2 + 10 km ^ 2 - 0 m ^ 2 -> m ^ 2".split_whitespace();
+        println!("{:?}", input);
+        let trees = earlgrey::EarleyParser::new(build_grammar())
+            .parse(input)
+            .unwrap();
+        let evaler = semanter();
+        let result = evaler.eval(&trees).unwrap();
+        println!("{:?}", trees);
+        assert_eq!(
+            Quantity::new(
+                11123100.,
+                Dimensions {
+                    length: 2.,
+                    ..Default::default()
+                },
+                Units {
+                    length: Length::Meter,
+                    ..Default::default()
+                }
+            ),
+            result
+        );
+    }
 }

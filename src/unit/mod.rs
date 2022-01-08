@@ -11,6 +11,14 @@ use length::Length;
 use mass::Mass;
 use time::Time;
 
+pub fn str_to_unit(s: &str) -> Result<Box<impl Unit>, &str> {
+    // TODO: hashmap possible units for lookup
+    if s == "m" {
+        Ok(Box::new(Length::Meter))
+    } else {
+        Err("")
+    }
+}
 pub trait Unit {
     fn conversion_factor(&self) -> StorageType;
     fn abbrev(&self) -> &'static str;
