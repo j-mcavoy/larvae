@@ -28,27 +28,13 @@ lazy_static! {
     };
 }
 
-pub fn str_to_unit(s: &str) -> Result<Box<impl Unit>, &str> {
-    // TODO: hashmap possible units for lookup
-    if s == "m" {
-        Ok(Box::new(Length::Meter))
-    } else {
-        Err("")
-    }
-}
 pub trait Unit {
     fn conversion_factor(&self) -> StorageType;
     fn abbrev(&self) -> &'static str;
     fn name(&self) -> &'static str;
     fn symbol(&self) -> &'static str;
     fn dimensions(&self) -> Dimensions;
-    fn quantity(&self) -> Quantity {
-        Quantity {
-            value: self.conversion_factor(),
-            dimensions: self.dimensions(),
-            units: Units::default(),
-        }
-    }
+    fn quantity(&self) -> Quantity;
 }
 impl std::fmt::Display for dyn Unit {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {

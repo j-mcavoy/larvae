@@ -33,4 +33,14 @@ impl Unit for Time {
             Second => 1.,
         }
     }
+    fn quantity(&self) -> Quantity {
+        Quantity {
+            value: self.conversion_factor(),
+            dimensions: self.dimensions(),
+            units: Units {
+                time: *self,
+                ..Default::default()
+            },
+        }
+    }
 }
