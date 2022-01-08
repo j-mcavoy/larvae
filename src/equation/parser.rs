@@ -28,6 +28,8 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .rule("expr", &["expr", "[->]", "units"])
         .rule("expr", &["expr", "[+]", "quantity"])
         .rule("expr", &["expr", "[-]", "quantity"])
+        .rule("expr", &["expr", "[*]", "quantity"])
+        .rule("expr", &["expr", "[/]", "quantity"])
         .rule("expr", &["quantity"])
         .rule("num", &["num"])
         .rule("quantity", &["num", "units"])
@@ -61,6 +63,8 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     ev.action("quantity -> num", |n| n[0]);
     ev.action("expr -> expr [+] quantity", |n| n[0].add(&n[2]).unwrap());
     ev.action("expr -> expr [-] quantity", |n| n[0].sub(&n[2]).unwrap());
+    ev.action("expr -> expr [*] quantity", |n| n[0].mul(&n[2]));
+    ev.action("expr -> expr [/] quantity", |n| n[0].mul(&n[2].inv()));
     ev.action("expr -> quantity", |n| n[0]);
     ev.action("expr -> expr [->] units", |n| {
         n[0].convert_units(&n[1].units)
@@ -96,7 +100,7 @@ mod test {
     #[test]
     pub fn test_parse_dimunits() {
         let input =
-            "1.123 km ^ 2 + 100 m * m + 10 km ^ 2 - 0 m ^ 2 -> m ^ 3 / m".split_whitespace();
+            "1 * 1.123 km ^ 2 + 100 m * m + 10 km ^ 2 - 0 m ^ 2 -> m ^ 3 / m".split_whitespace();
         println!("{:?}", input);
         let trees = earlgrey::EarleyParser::new(build_grammar())
             .parse(input)
