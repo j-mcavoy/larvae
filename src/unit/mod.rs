@@ -3,13 +3,30 @@ pub mod length;
 pub mod mass;
 pub mod time;
 
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
+use std::rc::Rc;
+
+use crate::quantity::Quantity;
 
 use super::dimension::Dimensions;
 use super::quantity::StorageType;
+use lazy_static::lazy_static;
 use length::Length;
 use mass::Mass;
 use time::Time;
+
+lazy_static! {
+    pub static ref UNITS_LOOKUP: HashMap<&'static str, Quantity> = {
+        let mut m = HashMap::new();
+        m.insert(Length::Meter.abbrev(), Length::Meter.quantity());
+        m.insert(Length::Meter.name(), Length::Meter.quantity());
+        m.insert(Length::KiloMeter.abbrev(), Length::KiloMeter.quantity());
+        m.insert(Length::KiloMeter.name(), Length::KiloMeter.quantity());
+        m
+    };
+}
 
 pub fn str_to_unit(s: &str) -> Result<Box<impl Unit>, &str> {
     // TODO: hashmap possible units for lookup
@@ -25,6 +42,13 @@ pub trait Unit {
     fn name(&self) -> &'static str;
     fn symbol(&self) -> &'static str;
     fn dimensions(&self) -> Dimensions;
+    fn quantity(&self) -> Quantity {
+        Quantity {
+            value: self.conversion_factor(),
+            dimensions: self.dimensions(),
+            units: Units::default(),
+        }
+    }
 }
 impl std::fmt::Display for dyn Unit {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {

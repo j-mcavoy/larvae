@@ -6,7 +6,7 @@ use regex::{Regex, RegexBuilder};
 use crate::{
     dimension::{Dimensions, StorageType},
     quantity::Quantity,
-    unit::{length::Length, Unit, Units},
+    unit::{length::Length, Unit, Units, UNITS_LOOKUP},
 };
 
 static UNITS: &'static [&str] = &["m"];
@@ -24,7 +24,7 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .terminal("[-]", |n| n == "-")
         .terminal("[->]", |n| n == "->")
         .terminal("num", |n| f64::from_str(n).is_ok())
-        .terminal("unit", |n| n == "m" || n == "km")
+        .terminal("unit", |n| UNITS_LOOKUP.contains_key(n))
         .rule("expr", &["expr", "[->]", "units"])
         .rule("expr", &["expr", "[+]", "quantity"])
         .rule("expr", &["expr", "[-]", "quantity"])
@@ -77,18 +77,11 @@ fn symbol_match(symbol: &str, token: &str) -> Quantity {
         "num" => Quantity::from_value(token.parse().unwrap()),
         "unit" => {
             let mut q = Quantity::default();
-            match token {
-                "km" => {
-                    q.units.length = Length::KiloMeter;
-                    q.dimensions.length = 1.
-                }
-                "m" => {
-                    q.units.length = Length::Meter;
-                    q.dimensions.length = 1.
-                }
-                _ => (),
-            };
-            q
+            if let Some(q) = UNITS_LOOKUP.get(token) {
+                *q
+            } else {
+                Quantity::default()
+            }
         }
         _ => Quantity::default(),
     }
