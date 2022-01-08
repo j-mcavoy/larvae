@@ -24,6 +24,8 @@ lazy_static! {
         m.insert(Length::Meter.name(), Length::Meter.quantity());
         m.insert(Length::KiloMeter.abbrev(), Length::KiloMeter.quantity());
         m.insert(Length::KiloMeter.name(), Length::KiloMeter.quantity());
+        m.insert(Time::Second.name(), Time::Second.quantity());
+        m.insert(Time::Second.abbrev(), Time::Second.quantity());
         m
     };
 }

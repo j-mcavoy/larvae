@@ -55,7 +55,7 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     ev.action("units -> unit", |n| n[0]);
     ev.action("units -> units units", |n| n[0].mul(&n[1]));
     ev.action("units -> units [*] units", |n| n[0].mul(&n[2]));
-    ev.action("units -> units [/] units", |n| n[0].mul(&n[1].inv()));
+    ev.action("units -> units [/] units", |n| n[0].mul(&n[2].inv()));
     ev.action("quantity -> num units", |n| {
         Quantity::new(n[0].value, n[1].dimensions, n[1].units)
     });
@@ -93,7 +93,8 @@ mod test {
     #[test]
     pub fn test_parse_dimunits() {
         let input =
-            "1 * 1.123 km ^ 2 + 100 m * m + 10 km ^ 2 - 0 m ^ 2 -> m ^ 3 / m".split_whitespace();
+            "1 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s"
+                .split_whitespace();
         println!("{:?}", input);
         let trees = earlgrey::EarleyParser::new(build_grammar())
             .parse(input)
@@ -106,6 +107,7 @@ mod test {
                 11123100.,
                 Dimensions {
                     length: 2.,
+                    time: -1.,
                     ..Default::default()
                 },
                 Units {
