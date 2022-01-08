@@ -19,6 +19,8 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .nonterm("units")
         .terminal("[+]", |n| n == "+")
         .terminal("[^]", |n| n == "^")
+        .terminal("[/]", |n| n == "/")
+        .terminal("[*]", |n| n == "*")
         .terminal("[-]", |n| n == "-")
         .terminal("[->]", |n| n == "->")
         .terminal("num", |n| f64::from_str(n).is_ok())
@@ -32,7 +34,9 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .rule("quantity", &["num"])
         .rule("unit", &["unit"])
         .rule("units", &["unit", "[^]", "num"])
-        .rule("units", &["units", "unit"])
+        .rule("units", &["units", "[/]", "units"])
+        .rule("units", &["units", "units"])
+        .rule("units", &["units", "[*]", "units"])
         .rule("units", &["unit"])
         .into_grammar("expr")
         .expect("Bad Gramar")
@@ -47,7 +51,9 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
         q
     });
     ev.action("units -> unit", |n| n[0]);
-    ev.action("units -> units unit", |n| n[0].mul(&n[1]));
+    ev.action("units -> units units", |n| n[0].mul(&n[1]));
+    ev.action("units -> units [*] units", |n| n[0].mul(&n[2]));
+    ev.action("units -> units [/] units", |n| n[0].mul(&n[1].inv()));
     ev.action("quantity -> num units", |n| {
         println!("{:?}", n);
         Quantity::new(n[0].value, n[1].dimensions, n[1].units)
@@ -89,7 +95,8 @@ mod test {
     use super::*;
     #[test]
     pub fn test_parse_dimunits() {
-        let input = "1.123 km ^ 2 + 100 m ^ 2 + 10 km ^ 2 - 0 m ^ 2 -> m ^ 2".split_whitespace();
+        let input =
+            "1.123 km ^ 2 + 100 m * m + 10 km ^ 2 - 0 m ^ 2 -> m ^ 3 / m".split_whitespace();
         println!("{:?}", input);
         let trees = earlgrey::EarleyParser::new(build_grammar())
             .parse(input)
