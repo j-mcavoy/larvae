@@ -1,6 +1,6 @@
 # larvae
 
-![larvae](https://gitlab.com/uploads/-/system/project/avatar/32538279/larvae.jpg?width=128?height=100)
+![larvae](https://gitlab.com/uploads/-/system/project/avatar/32538279/larvae.jpg?width=100)
 
 a command line scientific calculator with dimensional analysis support written in Rust 🦀
 
