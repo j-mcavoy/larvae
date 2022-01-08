@@ -17,20 +17,6 @@ pub struct Dimensions {
 impl Dimensions {
     pub fn pow(&self, x: StorageType) -> Self {
         Self {
-            length: self.length + x,
-            mass: self.mass + x,
-            time: self.time + x,
-        }
-    }
-    pub fn add(&self, r: &Self) -> Self {
-        Self {
-            length: self.length + r.length,
-            mass: self.mass + r.mass,
-            time: self.time + r.time,
-        }
-    }
-    pub fn mul(&self, x: StorageType) -> Self {
-        Self {
             length: self.length * x,
             mass: self.mass * x,
             time: self.time * x,
@@ -48,6 +34,24 @@ impl Dimensions {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    pub fn test_pow() {
+        let d = Dimensions {
+            length: 1.,
+            mass: 2.,
+            ..Default::default()
+        };
+
+        assert_eq!(
+            d.pow(2.),
+            Dimensions {
+                length: 2.,
+                mass: 4.,
+                ..Default::default()
+            }
+        )
+    }
 
     #[test]
     pub fn test_mul() {

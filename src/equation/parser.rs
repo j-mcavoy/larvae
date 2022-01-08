@@ -43,7 +43,7 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     ev.action("unit -> unit", |n| n[0]);
     ev.action("units -> unit [^] num", |n| {
         let mut q = n[0];
-        q.dimensions = n[0].dimensions.mul(n[2].value);
+        q.dimensions = n[0].dimensions.pow(n[2].value);
         q
     });
     ev.action("units -> unit", |n| n[0]);
