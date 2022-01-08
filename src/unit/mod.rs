@@ -50,11 +50,6 @@ pub struct Units {
     pub length: Length,
     pub mass: Mass,
     pub time: Time,
-    //  time: Box<dyn Time>,
-    //  current: Box<dyn Current>,
-    //  temprature: Box<dyn Temperature>,
-    //  luminous_intensity: Box<dyn LuminousIntensity>,
-    //  money: Box<dyn Money>,
 }
 impl Display for Units {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
