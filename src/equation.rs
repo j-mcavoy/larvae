@@ -2,12 +2,7 @@ use std::str::SplitWhitespace;
 
 use earlgrey::EarleyParser;
 
-use crate::{
-    quantity::Quantity,
-    unit::{Unit, UNITS_LOOKUP},
-};
-
-static UNITS: &'static [&str] = &["m"];
+use crate::{quantity::Quantity, unit::UNITS_LOOKUP};
 
 fn build_grammar() -> earlgrey::Grammar {
     use std::str::FromStr;

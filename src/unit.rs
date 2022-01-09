@@ -3,10 +3,8 @@ pub mod length;
 pub mod mass;
 pub mod time;
 
-
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use std::fmt::Display;
-
 
 use crate::quantity::Quantity;
 
