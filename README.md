@@ -26,7 +26,7 @@ $ larvae
 
 ## Why re-write insect in Rust?
 
-1. I thought it be fun
+1. I thought it'd be fun
 2. Maybe I'd learn something cool like Earley parsing
 3. Maybe with a little more work, it'll even be as useful as insect someday
 4. It's super fast. It's like 2 orders of magnitude faster than insect in its current state (albeit it's still lacking some features):
