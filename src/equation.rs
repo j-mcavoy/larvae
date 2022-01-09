@@ -26,10 +26,11 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .terminal("(", |n| n == "(")
         .terminal(")", |n| n == ")")
         .terminal("sqrt", |n| n == "sqrt")
+        .terminal("pi", |n| n == "pi")
         .terminal("num", |n| f64::from_str(n).is_ok())
         .terminal("unit", |n| UNITS_LOOKUP.contains_key(n))
         .rule("group", &["(", "expr", ")"])
-        .rule("expr", &["sqrt", "group"])
+        .rule("quantity", &["sqrt", "group"])
         .rule("equation", &["expr", "[->]", "units"])
         .rule("equation", &["expr"])
         .rule("expr", &["expr", "[+]", "quantity"])
@@ -38,8 +39,8 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .rule("expr", &["expr", "[/]", "quantity"])
         .rule("expr", &["expr", "[%]", "quantity"])
         .rule("expr", &["expr", "[!]"])
-        .rule("expr", &["sqrt", "(", "expr"])
         .rule("expr", &["quantity"])
+        .rule("quantity", &["pi"])
         .rule("num", &["num"])
         .rule("quantity", &["num", "units"])
         .rule("quantity", &["num"])
@@ -53,13 +54,6 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .expect("Bad Gramar")
 }
 
-fn gamma(x: f64) -> f64 {
-    #[link(name = "m")]
-    extern "C" {
-        fn tgamma(x: f64) -> f64;
-    }
-    unsafe { tgamma(x) }
-}
 pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     let mut ev = earlgrey::EarleyForest::new(symbol_match);
     ev.action("num -> num", |n| n[0]);
@@ -92,12 +86,13 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
         q
     });
     ev.action("group -> ( expr )", |n| n[1]);
-    ev.action("expr -> sqrt group", |n| {
+    ev.action("quantity -> sqrt group", |n| {
         let mut q = n[1];
         q.value = q.value.sqrt();
         q
     });
     ev.action("expr -> quantity", |n| n[0]);
+    ev.action("quantity -> pi", |n| n[0]);
     ev.action("equation -> expr", |n| n[0]);
     ev.action("equation -> expr [->] units", |n| {
         n[0].convert_units(&n[1].units)
@@ -108,6 +103,7 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
 fn symbol_match(symbol: &str, token: &str) -> Quantity {
     match symbol {
         "num" => Quantity::from_value(token.parse().unwrap()),
+        "pi" => Quantity::from_value(std::f64::consts::PI),
         "unit" => {
             if let Some(q) = UNITS_LOOKUP.get(token) {
                 *q
@@ -118,6 +114,14 @@ fn symbol_match(symbol: &str, token: &str) -> Quantity {
         }
         _ => Quantity::default(),
     }
+}
+
+fn gamma(x: f64) -> f64 {
+    #[link(name = "m")]
+    extern "C" {
+        fn tgamma(x: f64) -> f64;
+    }
+    unsafe { tgamma(x) }
 }
 
 pub fn tokenizer(input: &str) -> SplitWhitespace {
@@ -135,7 +139,7 @@ mod test {
     #[test]
     pub fn test_parse_dimunits() {
         let input =
-            "sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s"
+            "pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s"
                 .split_whitespace();
         println!("{:?}", input);
         let trees = earlgrey::EarleyParser::new(build_grammar())
