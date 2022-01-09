@@ -50,6 +50,8 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .rule("quantity", &["num"])
         .rule("unit", &["unit"])
         .rule("units", &["unit", "[^]", "num"])
+        .rule("quantity", &["num", "[^]", "num"])
+        .rule("quantity", &["group", "[^]", "num"])
         .rule("units", &["units", "[/]", "units"])
         .rule("units", &["units", "units"])
         .rule("units", &["units", "[*]", "units"])
@@ -71,6 +73,9 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     ev.action("units -> units units", |n| n[0].mul(&n[1]));
     ev.action("units -> units [*] units", |n| n[0].mul(&n[2]));
     ev.action("units -> units [/] units", |n| n[0].mul(&n[2].inv()));
+    ev.action("quantity -> num [^] num", |n| n[0].pow(n[2].value));
+    ev.action("quantity -> group [^] num", |n| n[0].pow(n[2].value));
+
     ev.action("quantity -> num units", |n| {
         Quantity::new(n[0].value, n[1].dimensions, n[1].units)
     });
