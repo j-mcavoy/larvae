@@ -15,6 +15,7 @@ use length::Length;
 use mass::Mass;
 use time::Time;
 
+// TODO: write a macro for generating units & dimensions
 lazy_static! {
     pub static ref UNITS_LOOKUP: HashMap<&'static str, Quantity> = {
         let mut m = HashMap::new();
