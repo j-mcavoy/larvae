@@ -32,7 +32,7 @@ $ larvae
 4. It's super fast. It's like 2 orders of magnitude faster than insect in its current state (albeit it's still lacking some features):
 
 ```bash
- time insect '1 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s'
+$ time insect '1 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s'
 11123100 m²/s
 insect   0.31s user 0.03s system 135% cpu 0.246 total
 
@@ -64,8 +64,11 @@ $ time larvae '1 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 
     - [x] Time
     - [ ] (more coming to a macro! near you)
   - [ ] Compound units (i.e. Newtons [kg m / s^2])
-- [ ] Equation parsing
+- [ ] Cli
   - [x] Basic functionality (currently only works when tokens are separated by white space)
+  - [x] Equation parsing w/ recognition of dimensioned quantities
   - [ ] "Smart" Tokenisation of equation strings containing functions, units, values, etc.
-- [] Future goals
-  - [] Support algebraic solving of variables w/ units
+  - [ ] Colors
+  - [ ] Fancy characters (i.e. s⁻³·m⁻², Ω)
+- [ ] Future goals
+  - [ ] Support algebraic solving of variables w/ units
