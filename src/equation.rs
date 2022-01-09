@@ -166,7 +166,7 @@ mod test {
     #[test]
     pub fn test_parse_dimunits() {
         let input =
-            "e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s"
+            "1 kg ^ -2 kg kg * e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s"
                 .split_whitespace();
         println!("{:?}", input);
         let trees = earlgrey::EarleyParser::new(build_grammar())
