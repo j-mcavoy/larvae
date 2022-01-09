@@ -48,13 +48,13 @@ $ time larvae '1 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 
   - [x] +, -,
   - [x] \*, /
   - [x] ^
-  - [ ] Other mathematical functions
-    - [ ] %
-    - [ ] !
-    - [ ] sqrt
-    - [ ] pi
-    - [ ] exp
-    - [ ] log
+  - [x] Other mathematical functions
+    - [x] %
+    - [x] !
+    - [x] sqrt
+    - [x] pi
+    - [x] exp
+    - [x] log
 
 - [x] Dimensional analysis
   - [x] Dimensional analysis arithmetic
