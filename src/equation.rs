@@ -10,11 +10,13 @@ static UNITS: &'static [&str] = &["m"];
 pub fn build_grammar() -> earlgrey::Grammar {
     use std::str::FromStr;
     earlgrey::GrammarBuilder::default()
+        // non-terminals
+        .nonterm("equation")
         .nonterm("expr")
+        .nonterm("group")
         .nonterm("quantity")
         .nonterm("units")
-        .nonterm("group")
-        .nonterm("equation")
+        // operations
         .terminal("[+]", |n| n == "+")
         .terminal("[^]", |n| n == "^")
         .terminal("[/]", |n| n == "/")
@@ -25,17 +27,18 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .terminal("[->]", |n| n == "->")
         .terminal("(", |n| n == "(")
         .terminal(")", |n| n == ")")
-        .terminal("sqrt", |n| n == "sqrt")
-        .terminal("log", |n| n == "log")
-        .terminal("pi", |n| n == "pi")
+        // constants
         .terminal("e", |n| n == "e")
+        .terminal("pi", |n| n == "pi")
+        // functions
+        .terminal("log", |n| n == "log")
         .terminal("num", |n| f64::from_str(n).is_ok())
+        .terminal("sqrt", |n| n == "sqrt")
         .terminal("unit", |n| UNITS_LOOKUP.contains_key(n))
-        .rule("group", &["(", "expr", ")"])
-        .rule("quantity", &["sqrt", "group"])
-        .rule("quantity", &["log", "group"])
+        // rules
         .rule("equation", &["expr", "[->]", "units"])
         .rule("equation", &["expr"])
+        .rule("group", &["(", "expr", ")"])
         .rule("expr", &["expr", "[+]", "quantity"])
         .rule("expr", &["expr", "[-]", "quantity"])
         .rule("expr", &["expr", "[*]", "quantity"])
@@ -43,19 +46,21 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .rule("expr", &["expr", "[%]", "quantity"])
         .rule("expr", &["expr", "[!]"])
         .rule("expr", &["quantity"])
-        .rule("quantity", &["pi"])
-        .rule("quantity", &["e"])
-        .rule("num", &["num"])
+        .rule("quantity", &["group", "[^]", "num"])
+        .rule("quantity", &["num", "[^]", "num"])
         .rule("quantity", &["num", "units"])
         .rule("quantity", &["num"])
+        .rule("quantity", &["log", "group"])
+        .rule("quantity", &["sqrt", "group"])
+        .rule("quantity", &["e"])
+        .rule("quantity", &["pi"])
         .rule("unit", &["unit"])
         .rule("units", &["unit", "[^]", "num"])
-        .rule("quantity", &["num", "[^]", "num"])
-        .rule("quantity", &["group", "[^]", "num"])
         .rule("units", &["units", "[/]", "units"])
         .rule("units", &["units", "units"])
         .rule("units", &["units", "[*]", "units"])
         .rule("units", &["unit"])
+        .rule("num", &["num"])
         .into_grammar("equation")
         .expect("Bad Gramar")
 }
@@ -63,7 +68,9 @@ pub fn build_grammar() -> earlgrey::Grammar {
 pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     let mut ev = earlgrey::EarleyForest::new(symbol_match);
     ev.action("num -> num", |n| n[0]);
+
     ev.action("unit -> unit", |n| n[0]);
+
     ev.action("units -> unit [^] num", |n| {
         let mut q = n[0];
         q.dimensions = n[0].dimensions.pow(n[2].value);
@@ -73,13 +80,8 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     ev.action("units -> units units", |n| n[0].mul(&n[1]));
     ev.action("units -> units [*] units", |n| n[0].mul(&n[2]));
     ev.action("units -> units [/] units", |n| n[0].mul(&n[2].inv()));
-    ev.action("quantity -> num [^] num", |n| n[0].pow(n[2].value));
-    ev.action("quantity -> group [^] num", |n| n[0].pow(n[2].value));
 
-    ev.action("quantity -> num units", |n| {
-        Quantity::new(n[0].value, n[1].dimensions, n[1].units)
-    });
-    ev.action("quantity -> num", |n| n[0]);
+    ev.action("expr -> quantity", |n| n[0]);
     ev.action("expr -> expr [+] quantity", |n| n[0].add(&n[2]).unwrap());
     ev.action("expr -> expr [-] quantity", |n| n[0].sub(&n[2]).unwrap());
     ev.action("expr -> expr [*] quantity", |n| n[0].mul(&n[2]));
@@ -94,7 +96,13 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
         q.value = gamma(q.value);
         q
     });
-    ev.action("group -> ( expr )", |n| n[1]);
+
+    ev.action("quantity -> group [^] num", |n| n[0].pow(n[2].value));
+    ev.action("quantity -> num [^] num", |n| n[0].pow(n[2].value));
+    ev.action("quantity -> num units", |n| {
+        Quantity::new(n[0].value, n[1].dimensions, n[1].units)
+    });
+    ev.action("quantity -> num", |n| n[0]);
     ev.action("quantity -> sqrt group", |n| {
         let mut q = n[1];
         q.value = q.value.sqrt();
@@ -105,9 +113,11 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
         q.value = q.value.log10();
         q
     });
-    ev.action("expr -> quantity", |n| n[0]);
-    ev.action("quantity -> pi", |n| n[0]);
     ev.action("quantity -> e", |n| n[0]);
+    ev.action("quantity -> pi", |n| n[0]);
+
+    ev.action("group -> ( expr )", |n| n[1]);
+
     ev.action("equation -> expr", |n| n[0]);
     ev.action("equation -> expr [->] units", |n| {
         n[0].convert_units(&n[2].units)
@@ -117,8 +127,8 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
 
 fn symbol_match(symbol: &str, token: &str) -> Quantity {
     match symbol {
-        "e" => Quantity::from_value(std::f64::consts::E),
         "num" => Quantity::from_value(token.parse().unwrap()),
+        "e" => Quantity::from_value(std::f64::consts::E),
         "pi" => Quantity::from_value(std::f64::consts::PI),
         "unit" => {
             if let Some(q) = UNITS_LOOKUP.get(token) {
