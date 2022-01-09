@@ -19,7 +19,7 @@ fn main() {
                 .map(|i| i.unwrap()),
         )
     };
-    let parser = earlgrey::EarleyParser::new(build_grammar());
+    let parser = parser();
     let evaler = semanter();
     for expr in input {
         match parser.parse(&mut tokenizer(expr.as_str())) {

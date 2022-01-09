@@ -1,5 +1,7 @@
 use std::str::SplitWhitespace;
 
+use earlgrey::EarleyParser;
+
 use crate::{
     quantity::Quantity,
     unit::{Unit, UNITS_LOOKUP},
@@ -7,7 +9,7 @@ use crate::{
 
 static UNITS: &'static [&str] = &["m"];
 
-pub fn build_grammar() -> earlgrey::Grammar {
+fn build_grammar() -> earlgrey::Grammar {
     use std::str::FromStr;
     earlgrey::GrammarBuilder::default()
         // non-terminals
@@ -152,6 +154,10 @@ fn gamma(x: f64) -> f64 {
 
 pub fn tokenizer(input: &str) -> SplitWhitespace {
     input.split_whitespace()
+}
+
+pub fn parser() -> EarleyParser {
+    EarleyParser::new(build_grammar())
 }
 
 #[cfg(test)]
