@@ -26,11 +26,13 @@ pub fn build_grammar() -> earlgrey::Grammar {
         .terminal("(", |n| n == "(")
         .terminal(")", |n| n == ")")
         .terminal("sqrt", |n| n == "sqrt")
+        .terminal("log", |n| n == "log")
         .terminal("pi", |n| n == "pi")
         .terminal("num", |n| f64::from_str(n).is_ok())
         .terminal("unit", |n| UNITS_LOOKUP.contains_key(n))
         .rule("group", &["(", "expr", ")"])
         .rule("quantity", &["sqrt", "group"])
+        .rule("quantity", &["log", "group"])
         .rule("equation", &["expr", "[->]", "units"])
         .rule("equation", &["expr"])
         .rule("expr", &["expr", "[+]", "quantity"])
@@ -91,6 +93,11 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
         q.value = q.value.sqrt();
         q
     });
+    ev.action("quantity -> log group", |n| {
+        let mut q = n[1];
+        q.value = q.value.log10();
+        q
+    });
     ev.action("expr -> quantity", |n| n[0]);
     ev.action("quantity -> pi", |n| n[0]);
     ev.action("equation -> expr", |n| n[0]);
@@ -139,7 +146,7 @@ mod test {
     #[test]
     pub fn test_parse_dimunits() {
         let input =
-            "pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s"
+            "log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s"
                 .split_whitespace();
         println!("{:?}", input);
         let trees = earlgrey::EarleyParser::new(build_grammar())
