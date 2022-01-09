@@ -5,7 +5,7 @@ mod equation;
 mod quantity;
 mod unit;
 
-use equation::parser::*;
+use equation::*;
 
 fn main() {
     let rl = RefCell::new(rustyline::Editor::<()>::new());
