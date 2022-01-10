@@ -20,27 +20,28 @@ struct UnitSystem {
     dim_t: LitFloat,
 }
 
-const METRIC_PREFIXES: &[(&str, &str, f64)] = &[
-    ("yotta", "Y", 24.),
-    ("zetta", "Z", 21.),
-    ("exa", "E", 18.),
-    ("peta", "P", 15.),
-    ("tera", "T", 12.),
-    ("giga", "G", 9.),
-    ("mega", "M", 6.),
-    ("kilo", "k", 3.),
-    ("hecto", "h", 2.),
-    ("deca", "da", 1.),
-    ("deci", "d", -1.),
-    ("centi", "c", -2.),
-    ("milli", "m", -3.),
-    ("micro", "u", -6.),
-    ("nano", "n", -9.),
-    ("pico", "p", -12.),
-    ("femto", "f", -15.),
-    ("atto", "a", -18.),
-    ("zepto", "z", -21.),
-    ("yocto", "y", -24.),
+// name, abbrev, symbol, 10^x
+const METRIC_PREFIXES: &[(&str, &str, &str, f64)] = &[
+    ("yotta", "Y", "Y", 24.),
+    ("zetta", "Z", "Z", 21.),
+    ("exa", "E", "E", 18.),
+    ("peta", "P", "P", 15.),
+    ("tera", "T", "T", 12.),
+    ("giga", "G", "G", 9.),
+    ("mega", "M", "M", 6.),
+    ("kilo", "k", "k", 3.),
+    ("hecto", "h", "h", 2.),
+    ("deca", "da", "da", 1.),
+    ("deci", "d", "d", -1.),
+    ("centi", "c", "c", -2.),
+    ("milli", "m", "m", -3.),
+    ("micro", "u", "μ", -6.),
+    ("nano", "n", "n", -9.),
+    ("pico", "p", "p", -12.),
+    ("femto", "f", "f", -15.),
+    ("atto", "a", "a", -18.),
+    ("zepto", "z", "z", -21.),
+    ("yocto", "y", "y", -24.),
 ];
 //($dim:ident :
 //$($unit:ident $abbrev:ident $symbol:ident $d_l:tt $d_m:tt $d_t:tt),+
@@ -63,23 +64,25 @@ impl Parse for UnitSystems {
                 let conversion_factor = input.parse()?;
                 units.push(Unit {
                     name: name.clone(),
-                    abbrev,
+                    abbrev: abbrev.clone(),
                     symbol: symbol.clone(),
                     conversion_factor,
                 });
                 if input.parse::<Token![!]>().is_ok() {
                     // metric flag
-                    for (pre, sym, pow) in METRIC_PREFIXES {
+                    for (pre, abr, sym, pow) in METRIC_PREFIXES {
                         let name: LitStr =
                             LitStr::new(&(pre.to_string() + &name.value()), dim_l.span());
                         let symbol: LitStr =
                             LitStr::new(&(sym.to_string() + &symbol.value()), dim_l.span());
+                        let abbrev: LitStr =
+                            LitStr::new(&(abr.to_string() + &abbrev.value()), dim_l.span());
 
                         let conversion_factor =
                             LitFloat::new(&format! {"1e{}", *pow}, dim_l.span());
                         units.push(Unit {
                             name,
-                            abbrev: symbol.clone(),
+                            abbrev,
                             symbol,
                             conversion_factor,
                         });
