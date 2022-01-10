@@ -9,11 +9,11 @@ use std::fmt::Display;
 dimensions! {
     "length" 1. 0. 0. :
     "meter" "m" "m" 1.!,
-    "mass" 1. 0. 0. :
+    "mass" 0. 1. 0. :
     "gram" "g" "g" 1.!,
     "time" 0. 0. 1. :
     "second" "s" "s" 1.!
-    "minute" "m" "min" 60.
+    "minute" "min" "min" 60.
     "hour" "h" "hr" 3600.,
     "force" 1. 1. -2. :
     "newton" "N" "N" 1.!,
