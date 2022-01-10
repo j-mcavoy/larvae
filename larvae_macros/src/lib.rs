@@ -94,6 +94,59 @@ impl Parse for UnitSystem {
     }
 }
 
+impl Parse for UnitSystems {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let mut unit_systems = vec![];
+        while !input.is_empty() {
+            let dimension = input.parse()?;
+            let dim_l: LitFloat = input.parse()?;
+            let dim_m: LitFloat = input.parse()?;
+            let dim_t: LitFloat = input.parse()?;
+            input.parse::<Token![:]>()?;
+            let mut units = vec![];
+
+            while input.parse::<Token![,]>().is_err() {
+                let name: LitStr = input.parse()?;
+                let abbrev: LitStr = input.parse()?;
+                let symbol: LitStr = input.parse()?;
+                let conversion_factor = input.parse()?;
+                units.push(Unit {
+                    name: name.clone(),
+                    abbrev,
+                    symbol: symbol.clone(),
+                    conversion_factor,
+                });
+                if input.parse::<Token![!]>().is_ok() {
+                    // metric flag
+                    for (pre, sym, pow) in METRIC_PREFIXES {
+                        let name: LitStr =
+                            LitStr::new(&(pre.to_string() + &name.value()), dim_l.span());
+                        let symbol: LitStr =
+                            LitStr::new(&(sym.to_string() + &symbol.value()), dim_l.span());
+
+                        let conversion_factor =
+                            LitFloat::new(&format! {"{:.1}", 10.0f64.powf(*pow)}, dim_l.span());
+                        units.push(Unit {
+                            name,
+                            abbrev: symbol.clone(),
+                            symbol,
+                            conversion_factor,
+                        });
+                    }
+                }
+            }
+            unit_systems.push(UnitSystem {
+                dimension,
+                units,
+                dim_l,
+                dim_m,
+                dim_t,
+            });
+        }
+        Ok(UnitSystems(unit_systems))
+    }
+}
+
 fn str2ident(s: LitStr) -> Ident {
     Ident::new(&s.value(), Span::call_site())
 }
@@ -102,93 +155,98 @@ const BASE_DIMENSIONS: &[&str] = &["length", "mass", "time"];
 
 #[proc_macro]
 pub fn dimensions(input: TokenStream) -> TokenStream {
-    let us = parse_macro_input!(input as UnitSystem);
+    let uss = parse_macro_input!(input as UnitSystems);
+    let mut output = quote! {}.into();
     println!("{}", stringify!(input));
-    let dim_ident = str2ident(us.dimension.clone());
-    let dim_enum = Ident::new(
-        &us.dimension.value().to_case(Case::UpperCamel),
-        dim_ident.span(),
-    );
-    let dim_l = us.dim_l;
-    let dim_m = us.dim_m;
-    let dim_t = us.dim_t;
-    let names_ident: Vec<Ident> = us.units.iter().map(|u| str2ident(u.name.clone())).collect();
-    let names: Vec<LitStr> = us.units.iter().map(|u| u.name.clone()).collect();
-    let symbols: Vec<LitStr> = us.units.iter().map(|u| u.symbol.clone()).collect();
-    let abbrevs: Vec<LitStr> = us.units.iter().map(|u| u.abbrev.clone()).collect();
-    let conversion_factors: Vec<LitFloat> = us
-        .units
-        .iter()
-        .map(|u| u.conversion_factor.clone())
-        .collect();
+    for us in uss.0 {
+        let dim_ident = str2ident(us.dimension.clone());
+        let dim_enum = Ident::new(
+            &us.dimension.value().to_case(Case::UpperCamel),
+            dim_ident.span(),
+        );
+        let dim_l = us.dim_l;
+        let dim_m = us.dim_m;
+        let dim_t = us.dim_t;
+        let names_ident: Vec<Ident> = us.units.iter().map(|u| str2ident(u.name.clone())).collect();
+        let names: Vec<LitStr> = us.units.iter().map(|u| u.name.clone()).collect();
+        let symbols: Vec<LitStr> = us.units.iter().map(|u| u.symbol.clone()).collect();
+        let abbrevs: Vec<LitStr> = us.units.iter().map(|u| u.abbrev.clone()).collect();
+        let conversion_factors: Vec<LitFloat> = us
+            .units
+            .iter()
+            .map(|u| u.conversion_factor.clone())
+            .collect();
 
-    let q_units = if BASE_DIMENSIONS.contains(&dim_ident.to_string().as_str()) {
-        quote! {
-            fn quantity(&self) -> Quantity {
-                Quantity {
-                    value: self.conversion_factor(),
-                    dimensions: self.dimensions(),
-                    units: Units {
-                        #dim_ident: *self,
-                        ..Default::default()
-                    },
+        let q_units = if BASE_DIMENSIONS.contains(&dim_ident.to_string().as_str()) {
+            quote! {
+                fn quantity(&self) -> Quantity {
+                    Quantity {
+                        value: self.conversion_factor(),
+                        dimensions: self.dimensions(),
+                        units: Units {
+                            #dim_ident: *self,
+                            ..Default::default()
+                        },
+                    }
                 }
             }
-        }
-    } else {
-        quote! {
-            fn quantity(&self) -> Quantity {
-                Quantity {
-                    value: self.conversion_factor(),
-                    dimensions: self.dimensions(),
-                    units: Default::default(),
+        } else {
+            quote! {
+                fn quantity(&self) -> Quantity {
+                    Quantity {
+                        value: self.conversion_factor(),
+                        dimensions: self.dimensions(),
+                        units: Default::default(),
+                    }
                 }
             }
-        }
-    };
+        };
 
-    let output = quote! (
-        pub mod #dim_ident {
-        use super::*;
-        use #dim_enum::*;
+        output = quote! (
+            #output
 
-        #[derive(Debug, Clone, Copy, PartialEq)]
-        pub enum #dim_enum {
-            #(#names_ident),*
-        }
-        impl Unit for #dim_enum {
-            fn dimensions(&self) -> Dimensions {
-                Dimensions {
-                    length: #dim_l,
-                    mass: #dim_m,
-                    time: #dim_t,
-                }
-            }
-            fn abbrev(&self) -> &'static str {
-                match self {
-                    #(#names_ident => #abbrevs),*
-                }
-            }
-            fn name(&self) -> &'static str {
-                match self {
-                    #(#names_ident => #names),*
-                }
-            }
-            fn symbol(&self) -> &'static str {
-                match self {
-                    #(#names_ident => #symbols),*
-                }
-            }
-            fn conversion_factor(&self) -> StorageType {
-                match self {
-                    #(#names_ident => #conversion_factors),*
-                }
-            }
+            pub mod #dim_ident {
+            use super::*;
+            use #dim_enum::*;
 
-            #q_units
-        }
-        }
-    );
+            #[derive(Debug, Clone, Copy, PartialEq)]
+            pub enum #dim_enum {
+                #(#names_ident),*
+            }
+            impl Unit for #dim_enum {
+                fn dimensions(&self) -> Dimensions {
+                    Dimensions {
+                        length: #dim_l,
+                        mass: #dim_m,
+                        time: #dim_t,
+                    }
+                }
+                fn abbrev(&self) -> &'static str {
+                    match self {
+                        #(#names_ident => #abbrevs),*
+                    }
+                }
+                fn name(&self) -> &'static str {
+                    match self {
+                        #(#names_ident => #names),*
+                    }
+                }
+                fn symbol(&self) -> &'static str {
+                    match self {
+                        #(#names_ident => #symbols),*
+                    }
+                }
+                fn conversion_factor(&self) -> StorageType {
+                    match self {
+                        #(#names_ident => #conversion_factors),*
+                    }
+                }
+
+                #q_units
+            }
+            }
+        );
+    }
     output.into()
 }
 #[proc_macro]
