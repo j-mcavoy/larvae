@@ -67,12 +67,12 @@ Summary
 
 - [x] Dimensional analysis
   - [x] Dimensional analysis arithmetic
-  - [ ] Basic units
+  - [x] Basic units
     - [x] Length
     - [x] Mass
     - [x] Time
-    - [ ] (more coming to a macro! near you)
-  - [ ] Compound units (i.e. Newtons [kg m / s^2])
+  - [x] Compound units
+    - [x] Force
 - [ ] Cli
   - [x] Basic functionality (currently only works when tokens are separated by white space)
   - [x] Equation parsing w/ recognition of dimensioned quantities
