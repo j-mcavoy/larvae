@@ -19,22 +19,6 @@ dimensions! {
     "newton" "N" "N" 1.!,
 }
 
-// TODO: write a macro for generating units & dimensions
-//lazy_static! {
-//    pub static ref UNITS_LOOKUP: HashMap<&'static str, Quantity> = {
-//        let mut m = HashMap::new();
-//        m.insert(Length::meter.abbrev(), Length::meter.quantity());
-//        m.insert(Length::meter.name(), Length::meter.quantity());
-//        m.insert(Length::kilometer.abbrev(), Length::kilometer.quantity());
-//        m.insert(Length::kilometer.name(), Length::kilometer.quantity());
-//        m.insert(Time::second.name(), Time::second.quantity());
-//        m.insert(Time::second.abbrev(), Time::second.quantity());
-//        m.insert(Mass::kilogram.name(), Mass::kilogram.quantity());
-//        m.insert(Mass::kilogram.abbrev(), Mass::kilogram.quantity());
-//        m
-//    };
-//}
-
 pub trait Unit {
     fn conversion_factor(&self) -> StorageType;
     fn abbrev(&self) -> &'static str;
