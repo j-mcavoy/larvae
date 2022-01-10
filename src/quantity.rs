@@ -1,8 +1,4 @@
-#[macro_use]
-use larvae_macros::dimension;
-
 use std::fmt::Display;
-use std::ops::Add;
 
 use super::dimension::*;
 use super::unit::*;
@@ -26,12 +22,6 @@ impl Quantity {
     pub fn from_value(value: StorageType) -> Self {
         Quantity {
             value,
-            ..Default::default()
-        }
-    }
-    pub fn from_units(units: Units) -> Self {
-        Quantity {
-            units,
             ..Default::default()
         }
     }
@@ -149,7 +139,6 @@ mod test {
 
     use super::*;
     use crate::unit::length::Length::*;
-
     use crate::unit::Units;
 
     #[test]
@@ -166,7 +155,7 @@ mod test {
         assert_eq!(1., Quantity::conversion_factor(&m.units, &m.dimensions));
         let m = Quantity {
             units: Units {
-                length: KiloMeter,
+                length: kilometer,
                 ..Units::SI()
             },
             value: 2000.,
@@ -193,14 +182,14 @@ mod test {
         assert_eq!(m, converted);
 
         let converted = m.convert_units(&Units {
-            length: KiloMeter,
+            length: kilometer,
             ..Units::SI()
         });
 
         assert_eq!(
             Quantity {
                 units: Units {
-                    length: KiloMeter,
+                    length: kilometer,
                     ..Units::SI()
                 },
                 dimensions: Dimensions {
@@ -224,7 +213,7 @@ mod test {
         };
         let n = Quantity {
             units: Units {
-                length: KiloMeter,
+                length: kilometer,
                 ..Units::SI()
             },
             value: -20.,
@@ -261,7 +250,7 @@ mod test {
         };
         let n = Quantity {
             units: Units {
-                length: KiloMeter,
+                length: kilometer,
                 ..Units::SI()
             },
             value: -20.,
