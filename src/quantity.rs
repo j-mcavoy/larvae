@@ -85,53 +85,93 @@ impl Quantity {
         }
     }
 }
+
+macro_rules! replace_expr {
+    ($_t:tt $sub:expr) => {
+        $sub
+    };
+}
+
+macro_rules! dim_display {
+    ($f:ident, $sel:ident, $($dim:ident),+) => {
+        {
+            let out = write!($f,
+               concat! (
+                   "{} ",
+                    $(replace_expr!(
+                            ($dim)
+                            "{} "
+                        )
+                    ),*
+               ),
+                $sel.value,
+                $(if $sel.dimensions.$dim != 0. {
+                        if $sel.dimensions.$dim == 1.0 {
+                            format!("{}", $sel.units.$dim.symbol())
+                        } else if $sel.dimensions.$dim == ($sel.dimensions.$dim as i64) as f64 {
+                            format!(
+                                "{}{}",
+                                $sel.units.$dim.symbol(),
+                                num_to_superscript($sel.dimensions.$dim as i64)
+                            )
+                        } else {
+                            format!("{}^({})", $sel.units.$dim.symbol(), $sel.dimensions.$dim)
+                        }
+                    } else {
+                        "".to_string()
+                    }
+                ),+
+            );
+            out
+        }
+    }
+}
+
 impl Display for Quantity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{} {} {} {}",
-            self.value,
-            if self.dimensions.length != 0. {
-                format!(
-                    "{}{}",
-                    self.units.length.symbol(),
-                    if self.dimensions.length == 1. {
-                        "".to_string()
-                    } else {
-                        format!("^{}", self.dimensions.length)
-                    }
-                )
-            } else {
-                "".to_string()
-            },
-            if self.dimensions.mass != 0. {
-                format!(
-                    "{}{}",
-                    self.units.mass.symbol(),
-                    if self.dimensions.mass == 1.0 {
-                        "".to_string()
-                    } else {
-                        format!("^{}", self.dimensions.mass)
-                    }
-                )
-            } else {
-                "".to_string()
-            },
-            if self.dimensions.time != 0. {
-                format!(
-                    "{}{}",
-                    self.units.time.symbol(),
-                    if self.dimensions.time == 1.0 {
-                        "".to_string()
-                    } else {
-                        format!("^{}", self.dimensions.time)
-                    }
-                )
-            } else {
-                "".to_string()
-            }
-        )
+        dim_display! {f, self, length, mass, time}
     }
+}
+
+fn num_to_superscript(n: i64) -> String {
+    let mut out = "".to_string();
+    let mut num = n;
+    if n.is_negative() {
+        num *= -1;
+    }
+    loop {
+        out += if num % 10 == 0 {
+            "⁰"
+        } else if num % 10 == 1 {
+            "¹"
+        } else if num % 10 == 2 {
+            "²"
+        } else if num % 10 == 3 {
+            "³"
+        } else if num % 10 == 4 {
+            "⁴"
+        } else if num % 10 == 5 {
+            "⁵"
+        } else if num % 10 == 6 {
+            "⁶"
+        } else if num % 10 == 7 {
+            "⁷"
+        } else if num % 10 == 8 {
+            "⁸"
+        } else if num % 10 == 9 {
+            "⁹"
+        } else {
+            ""
+        };
+        num = num / 10;
+        if num == 0 {
+            if n.is_negative() {
+                out += "⁻";
+            }
+            break;
+        }
+    }
+    out.chars().rev().collect::<String>()
 }
 
 #[cfg(test)]

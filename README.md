@@ -78,6 +78,6 @@ Summary
   - [x] Equation parsing w/ recognition of dimensioned quantities
   - [ ] "Smart" Tokenisation of equation strings containing functions, units, values, etc.
   - [ ] Colors
-  - [ ] Fancy characters (i.e. s⁻³·m⁻², Ω)
+  - [x] Fancy characters (i.e. s⁻³·m⁻², Ω)
 - [ ] Future goals
   - [ ] Support algebraic solving of variables w/ units
