@@ -19,19 +19,21 @@ use larvae_macros::dimension;
 
 dimension! {
     "length" 1. 0. 0. :
-        "meter" "m" "m" 1.
-        "kilometer" "km" "km" 1e3
+        "meter" "m" "m" 1.!
 }
 dimension! {
     "mass" 1. 0. 0. :
-        "gram" "g" "g" 1.
-        "kilogram" "kg" "kg" 1e3
+        "gram" "g" "g" 1.!
 }
 dimension! {
     "time" 0. 0. 1. :
-        "second" "s" "s" 1.
+        "second" "s" "s" 1.!
         "minute" "m" "min" 60.
         "hour" "h" "hr" 3600.
+}
+dimension! {
+    "force" 1. 1. -1. :
+        "newton" "N" "N" 1.!
 }
 
 // TODO: write a macro for generating units & dimensions

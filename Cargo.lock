@@ -115,6 +115,7 @@ name = "larvae_macros"
 version = "0.1.0"
 dependencies = [
  "convert_case",
+ "lazy_static",
  "proc-macro2",
  "quote",
  "syn",
