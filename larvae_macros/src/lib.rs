@@ -34,7 +34,7 @@ const METRIC_PREFIXES: &[(&str, &str, f64)] = &[
     ("deci", "d", -1.),
     ("centi", "c", -2.),
     ("milli", "m", -3.),
-    ("micro", "μ", -6.),
+    ("micro", "u", -6.),
     ("nano", "n", -9.),
     ("pico", "p", -12.),
     ("femto", "f", -15.),
