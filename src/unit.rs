@@ -15,7 +15,7 @@ dimensions! {
     "second" "s" "s" 1.!
     "minute" "m" "min" 60.
     "hour" "h" "hr" 3600.,
-    "force" 1. 1. -1. :
+    "force" 1. 1. -2. :
     "newton" "N" "N" 1.!,
 }
 
