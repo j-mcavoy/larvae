@@ -129,7 +129,7 @@ pub fn dimension(input: TokenStream) -> TokenStream {
             }
             fn name(&self) -> &'static str {
                 match self {
-                    #(#names_ident => #symbols),*
+                    #(#names_ident => #names),*
                 }
             }
             fn symbol(&self) -> &'static str {
