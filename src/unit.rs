@@ -1,7 +1,7 @@
-pub mod force;
-pub mod length;
-pub mod mass;
-pub mod time;
+//pub mod force;
+//pub mod length;
+//pub mod mass;
+//pub mod time;
 
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -15,18 +15,37 @@ use length::Length;
 use mass::Mass;
 use time::Time;
 
+use larvae_macros::dimension;
+
+dimension! {
+    "length" 1. 0. 0. :
+        "meter" "m" "m" 1.
+        "kilometer" "km" "km" 1e3
+}
+dimension! {
+    "mass" 1. 0. 0. :
+        "gram" "g" "g" 1.
+        "kilogram" "kg" "kg" 1e3
+}
+dimension! {
+    "time" 0. 0. 1. :
+        "second" "s" "s" 1.
+        "minute" "m" "min" 60.
+        "hour" "h" "hr" 3600.
+}
+
 // TODO: write a macro for generating units & dimensions
 lazy_static! {
     pub static ref UNITS_LOOKUP: HashMap<&'static str, Quantity> = {
         let mut m = HashMap::new();
-        m.insert(Length::Meter.abbrev(), Length::Meter.quantity());
-        m.insert(Length::Meter.name(), Length::Meter.quantity());
-        m.insert(Length::KiloMeter.abbrev(), Length::KiloMeter.quantity());
-        m.insert(Length::KiloMeter.name(), Length::KiloMeter.quantity());
-        m.insert(Time::Second.name(), Time::Second.quantity());
-        m.insert(Time::Second.abbrev(), Time::Second.quantity());
-        m.insert(Mass::KiloGram.name(), Mass::KiloGram.quantity());
-        m.insert(Mass::KiloGram.abbrev(), Mass::KiloGram.quantity());
+        m.insert(Length::meter.abbrev(), Length::meter.quantity());
+        m.insert(Length::meter.name(), Length::meter.quantity());
+        m.insert(Length::kilometer.abbrev(), Length::kilometer.quantity());
+        m.insert(Length::kilometer.name(), Length::kilometer.quantity());
+        m.insert(Time::second.name(), Time::second.quantity());
+        m.insert(Time::second.abbrev(), Time::second.quantity());
+        m.insert(Mass::kilogram.name(), Mass::kilogram.quantity());
+        m.insert(Mass::kilogram.abbrev(), Mass::kilogram.quantity());
         m
     };
 }
@@ -60,9 +79,9 @@ impl Display for Units {
 impl Units {
     pub const fn SI() -> Self {
         Self {
-            length: Length::Meter,
-            mass: Mass::KiloGram,
-            time: Time::Second,
+            length: Length::meter,
+            mass: Mass::kilogram,
+            time: Time::second,
         }
     }
 }

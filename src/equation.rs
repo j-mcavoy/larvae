@@ -184,7 +184,7 @@ mod test {
                     ..Default::default()
                 },
                 Units {
-                    length: Length::Meter,
+                    length: Length::meter,
                     ..Default::default()
                 }
             ),

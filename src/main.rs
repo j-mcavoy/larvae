@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate larvae_macros;
 use std::cell::RefCell;
 
 mod dimension;

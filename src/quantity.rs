@@ -1,3 +1,6 @@
+#[macro_use]
+use larvae_macros::dimension;
+
 use std::fmt::Display;
 use std::ops::Add;
 
@@ -146,7 +149,7 @@ mod test {
 
     use super::*;
     use crate::unit::length::Length::*;
-    
+
     use crate::unit::Units;
 
     #[test]
