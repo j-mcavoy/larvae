@@ -117,7 +117,7 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
 
     ev.action("equation -> expr", |n| n[0]);
     ev.action("equation -> expr [->] units", |n| {
-        n[0].convert_units(&n[2].units)
+        n[0].set_units(&n[2].units)
     });
     ev
 }

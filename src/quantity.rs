@@ -25,7 +25,7 @@ impl Quantity {
             ..Default::default()
         }
     }
-    pub fn convert_units(&self, units: &Units) -> Self {
+    pub fn set_units(&self, units: &Units) -> Self {
         Self {
             units: *units,
             value: self.value * Self::conversion_factor(&self.units, &self.dimensions)
@@ -65,7 +65,7 @@ impl Quantity {
     }
 
     pub fn mul(&self, r: &Self) -> Self {
-        let r_converted = r.convert_units(&self.units.clone());
+        let r_converted = r.set_units(&self.units.clone());
         Self {
             value: self.value * r_converted.value,
             dimensions: self.dimensions._mul(&r.dimensions),
@@ -76,7 +76,7 @@ impl Quantity {
         if self.dimensions != r.dimensions {
             Err(DimensionError(self.dimensions, r.dimensions))
         } else {
-            let r_converted = r.clone().convert_units(&self.units.clone());
+            let r_converted = r.clone().set_units(&self.units.clone());
             Ok(Self {
                 value: self.value + r_converted.value,
                 dimensions: self.dimensions,
@@ -217,11 +217,11 @@ mod test {
                 ..Default::default()
             },
         };
-        let converted = m.convert_units(&Units::SI());
+        let converted = m.set_units(&Units::SI());
 
         assert_eq!(m, converted);
 
-        let converted = m.convert_units(&Units {
+        let converted = m.set_units(&Units {
             length: kilometer,
             ..Units::SI()
         });
