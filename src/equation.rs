@@ -127,14 +127,7 @@ fn symbol_match(symbol: &str, token: &str) -> Quantity {
         "num" => Quantity::from_value(token.parse().unwrap()),
         "e" => Quantity::from_value(std::f64::consts::E),
         "pi" => Quantity::from_value(std::f64::consts::PI),
-        "unit" => {
-            if let Some(q) = UNITS_LOOKUP.get(token) {
-                *q
-            } else {
-                println!("invalid unit");
-                Quantity::default()
-            }
-        }
+        "unit" => *UNITS_LOOKUP.get(token).expect("invalid unit"),
         _ => Quantity::default(),
     }
 }
