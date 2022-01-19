@@ -140,8 +140,51 @@ fn gamma(x: f64) -> f64 {
     unsafe { tgamma(x) }
 }
 
-pub fn tokenizer(input: &str) -> SplitWhitespace {
-    input.split_whitespace()
+pub struct Tokenizer<I: Iterator<Item = char>>(lexers::Scanner<I>);
+
+impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
+    type Item = String;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.scan_whitespace();
+        self.0
+            .scan_number()
+            .or_else(|| self.0.scan_math_op())
+            .or_else(|| self.0.scan_unit())
+            .or_else(|| self.0.scan_math_op())
+    }
+}
+
+impl<I: Iterator<Item = char>> Tokenizer<I> {
+    pub fn scan_unit(&mut self) -> Option<(String, String)> {
+        static PFX: &[&str] = &[
+            "da", "h", "k", "M", "G", "T", "P", "E", "Z", "Y", "y", "z", "a", "f", "p", "n", "µ",
+            "m", "c", "d", "", // no multiplier prefix, raw unit
+        ];
+        // NOTE: longest prefix first for longest match (ie: 'da')
+        assert_eq!(PFX[0], "da");
+        static BARE_UNITS: &[&str] = &[
+            "kat", "mol", "rad", "Bq", "cd", "Gy", "Hz", "lm", "lx", "Pa", "sr", "Sv", "Wb", "A",
+            "°C", "C", "F", "g", "H", "J", "K", "m", "N", "s", "S", "T", "V", "W", "Ω",
+        ];
+        assert_eq!(BARE_UNITS[0].len(), 3);
+        for prefix in PFX {
+            let pfx_backtrack = self.buffer_pos();
+            if self.accept_all(prefix.chars()) {
+                for unit in BARE_UNITS {
+                    if self.accept_all(unit.chars()) {
+                        self.extract_string(); // ignore
+                        return Some((prefix.to_string(), unit.to_string()));
+                    }
+                }
+            }
+            self.set_buffer_pos(pfx_backtrack);
+        }
+        None
+    }
+}
+
+pub fn tokenizer<I: Iterator<Item = char>>(input: I) -> Tokenizer<I> {
+    Tokenizer(lexers::Scanner::new(input))
 }
 
 pub fn parser() -> EarleyParser {
@@ -157,11 +200,17 @@ mod test {
 
     use super::*;
     #[test]
+    pub fn test_tokenizer() {
+        let input = "-123.456 +1e4";
+        let expected: Vec<String> = input.split_whitespace().map(|x| x.to_string()).collect();
+        assert_eq!(expected, tokenizer(input.chars()).collect::<Vec<String>>());
+    }
+    #[test]
     pub fn test_parse_dimunits() {
         let input =
             "1 kg ^ -2 kg kg * e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s";
         println!("{}", input);
-        let trees = parser().parse(tokenizer(input)).unwrap();
+        let trees = parser().parse(tokenizer(input.chars())).unwrap();
         let evaler = semanter();
         let result = evaler.eval(&trees).unwrap();
         println!("{:?}", trees);

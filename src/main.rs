@@ -24,7 +24,7 @@ fn main() {
     let parser = parser();
     let evaler = semanter();
     for expr in input {
-        match parser.parse(&mut tokenizer(expr.as_str())) {
+        match parser.parse(&mut tokenizer(expr.chars())) {
             Err(e) => println!("Parse err: {:?}", e),
             Ok(state) => {
                 rl.borrow_mut().add_history_entry(&expr);
