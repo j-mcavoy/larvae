@@ -12,7 +12,7 @@ Command mode:
 
 ```bash
 $ larvae '1 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s'
-11123100 m^2  s^-1
+11123100 m²/s
 ```
 
 Interactive mode:
@@ -20,7 +20,7 @@ Interactive mode:
 ```bash
 $ larvae
 >>> 1 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s
-11123100 m^2  s^-1
+11123100 m²/s
 >>>
 ```
 
