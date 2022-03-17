@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Display;
 
 use super::dimension::*;
@@ -86,50 +87,58 @@ impl Quantity {
     }
 }
 
-macro_rules! replace_expr {
-    ($_t:tt $sub:expr) => {
-        $sub
-    };
-}
-
-macro_rules! dim_display {
-    ($f:ident, $sel:ident, $($dim:ident),+) => {
-        {
-            let out = write!($f,
-               concat! (
-                   "{} ",
-                    $(replace_expr!(
-                            ($dim)
-                            "{} "
-                        )
-                    ),*
-               ),
-                $sel.value,
-                $(if $sel.dimensions.$dim != 0. {
-                        if $sel.dimensions.$dim == 1.0 {
-                            format!("{}", $sel.units.$dim.symbol())
-                        } else if $sel.dimensions.$dim == ($sel.dimensions.$dim as i64) as f64 {
-                            format!(
-                                "{}{}",
-                                $sel.units.$dim.symbol(),
-                                num_to_superscript($sel.dimensions.$dim as i64)
-                            )
-                        } else {
-                            format!("{}^({})", $sel.units.$dim.symbol(), $sel.dimensions.$dim)
-                        }
-                    } else {
-                        "".to_string()
-                    }
-                ),+
-            );
-            out
-        }
+macro_rules! sym_dim {
+    ($f:ident, $map: ident, $sel:ident, $($dim:ident),+) => {
+        let mut $map: Vec<(&str, f64)> = vec![
+            $(($sel.units.$dim.symbol(),  $sel.dimensions.$dim)),+
+        ];
     }
 }
 
 impl Display for Quantity {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        dim_display! {f, self, length, mass, time}
+        sym_dim!(f, sym_dim, self, length, mass, time);
+        sym_dim.sort_by(|l, r| r.1.partial_cmp(&l.1).unwrap());
+
+        let mut pos_dims = vec![];
+        let mut neg_dims = vec![];
+        for (sym, dim) in sym_dim {
+            if dim == 0. {
+                continue;
+            }
+            if dim.is_sign_positive() {
+                pos_dims.push((sym, dim))
+            } else if dim.is_sign_negative() {
+                neg_dims.insert(0, (sym, -dim))
+            }
+        }
+        let mut pos_units = vec![];
+        for (sym, dim) in pos_dims.clone() {
+            pos_units.push(if dim == 1.0 {
+                format!("{}", sym)
+            } else if dim == (dim as i64) as f64 {
+                format!("{}{}", sym, num_to_superscript(dim as i64))
+            } else {
+                format!("{}^({})", sym, dim)
+            });
+        }
+        let mut neg_units = vec![];
+        for (sym, dim) in neg_dims.clone() {
+            neg_units.push(if dim == 1.0 {
+                format!("{}", sym)
+            } else if dim == (dim as i64) as f64 {
+                format!("{}{}", sym, num_to_superscript(dim as i64))
+            } else {
+                format!("{}^({})", sym, dim)
+            });
+        }
+        let units: String = match ((pos_dims.len(), neg_dims.len())) {
+            (0, 0) => String::new(),
+            (_, 0) => pos_units.join("·"),
+            (0, _) => format!("1/{}", neg_units.join("·")),
+            (_, _) => format!("{}/{}", pos_units.join("·"), neg_units.join("·")),
+        };
+        write!(f, "{} {}", self.value, units)
     }
 }
 
@@ -332,5 +341,42 @@ mod test {
             },
             out
         );
+    }
+
+    #[test]
+    pub fn test_quantity_display() {
+        let q = Quantity {
+            value: 25.,
+            dimensions: Dimensions {
+                length: 1.,
+                mass: 2.,
+                ..Default::default()
+            },
+            units: Units::SI(),
+        };
+        assert_eq!(q.to_string(), "25 kg²·m");
+        let q = Quantity {
+            value: 25.,
+            dimensions: Dimensions {
+                length: 1.,
+                mass: 2.,
+                time: -3.,
+                ..Default::default()
+            },
+            units: Units::SI(),
+        };
+
+        assert_eq!(q.to_string(), "25 kg²·m/s³");
+
+        let q = Quantity {
+            value: 25.,
+            dimensions: Dimensions {
+                length: -1.,
+                mass: -2.,
+                ..Default::default()
+            },
+            units: Units::SI(),
+        };
+        assert_eq!(q.to_string(), "25 1/kg²·m");
     }
 }
