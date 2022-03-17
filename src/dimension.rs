@@ -1,5 +1,3 @@
-
-
 pub type StorageType = f64;
 
 #[derive(Debug, Clone, Copy, PartialEq)]

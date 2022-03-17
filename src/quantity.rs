@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+
 use std::fmt::Display;
 
 use super::dimension::*;
@@ -132,7 +132,7 @@ impl Display for Quantity {
                 format!("{}^({})", sym, dim)
             });
         }
-        let units: String = match ((pos_dims.len(), neg_dims.len())) {
+        let units: String = match (pos_dims.len(), neg_dims.len()) {
             (0, 0) => String::new(),
             (_, 0) => pos_units.join("·"),
             (0, _) => format!("1/{}", neg_units.join("·")),
