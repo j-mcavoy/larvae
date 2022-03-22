@@ -29,6 +29,7 @@ fn build_grammar() -> earlgrey::Grammar {
         .terminal("e", |n| n == "e")
         .terminal("pi", |n| n == "pi")
         // functions
+        .terminal("ln", |n| n == "ln")
         .terminal("log", |n| n == "log")
         .terminal("+num", |n| n.starts_with("+") && f64::from_str(n).is_ok())
         .terminal("-num", |n| n.starts_with("-") && f64::from_str(n).is_ok())
@@ -57,6 +58,7 @@ fn build_grammar() -> earlgrey::Grammar {
         .rule("quantity", &["group", "[^]", "num"])
         .rule("quantity", &["num", "[^]", "num"])
         .rule("quantity", &["log", "group"])
+        .rule("quantity", &["ln", "group"])
         .rule("quantity", &["sqrt", "group"])
         .rule("quantity", &["e"])
         .rule("quantity", &["pi"])
@@ -139,6 +141,11 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     ev.action("quantity -> log group", |n| {
         let mut q = n[1];
         q.value = q.value.log10();
+        q
+    });
+    ev.action("quantity -> ln group", |n| {
+        let mut q = n[1];
+        q.value = q.value.ln();
         q
     });
     ev.action("quantity -> e", |n| n[0]);
