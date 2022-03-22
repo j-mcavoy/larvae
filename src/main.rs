@@ -1,12 +1,9 @@
-#[macro_use]
-extern crate larvae_macros;
+#![feature(associated_type_bounds)]
 use std::cell::RefCell;
-
 mod dimension;
 mod equation;
 mod quantity;
 mod unit;
-
 use equation::*;
 
 fn main() {
@@ -24,7 +21,8 @@ fn main() {
     let parser = parser();
     let evaler = semanter();
     for expr in input {
-        match parser.parse(&mut tokenizer(expr.chars())) {
+        let tokens = tokenizer(expr.chars());
+        match parser.parse(tokens) {
             Err(e) => println!("Parse err: {:?}", e),
             Ok(state) => {
                 rl.borrow_mut().add_history_entry(&expr);

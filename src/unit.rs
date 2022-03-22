@@ -46,6 +46,7 @@ impl Display for Units {
     }
 }
 impl Units {
+    #[allow(non_snake_case)]
     pub const fn SI() -> Self {
         Self {
             length: Length::meter,

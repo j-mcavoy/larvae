@@ -76,7 +76,7 @@ Summary
 - [ ] Cli
   - [x] Basic functionality (currently only works when tokens are separated by white space)
   - [x] Equation parsing w/ recognition of dimensioned quantities
-  - [ ] "Smart" Tokenisation of equation strings containing functions, units, values, etc.
+  - [x] "Smart" Tokenisation of equation strings containing functions, units, values, etc.
   - [ ] Colors
   - [x] Fancy characters (i.e. s⁻³·m⁻², Ω)
 - [ ] Future goals
