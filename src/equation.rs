@@ -187,8 +187,8 @@ impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
         self.0.scan_whitespace();
         self.0
             .scan_number()
-            .or_else(|| self.0.scan_math_op())
             .or_else(|| self.0.scan_arrow())
+            .or_else(|| self.0.scan_math_op())
             .or_else(|| self.0.scan_identifier())
             .or_else(|| {
                 if let Some(unit) = self.0.larvae_scan_unit() {
@@ -240,11 +240,12 @@ pub fn parser() -> EarleyParser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dimension::Dimensions;
+    use crate::unit::length::Length::*;
+    use crate::{dimension::Dimensions, unit::Units};
 
     #[test]
     pub fn test_tokenizer() {
-        let input = "-123.456 +1e4";
+        let input = "-123.456 m + 1e4 m -> m";
         let expected: Vec<String> = input.split_whitespace().map(|x| x.to_string()).collect();
         assert_eq!(expected, tokenizer(input.chars()).collect::<Vec<String>>());
     }
@@ -254,25 +255,43 @@ mod tests {
             "1kg^-2kg kg*e/e*log(10)*pi/pi*sqrt(1)!%2*1.123kilometer^2/s+100s^-1m*m+10km^2/s-0m^2/s-> m^3/m/s";
         let parsed: Vec<String> = tokenizer(input.chars()).collect();
         let expected: Vec<String> =
-            "1 kg ^ -2 kg kg * e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s +100 s ^ -1 m * m +10 km ^ 2 / s -0 m ^ 2 / s - > m ^ 3 / m / s".split_whitespace().map(|s| s.to_string()).collect();
+            "1 kg ^ -2 kg kg * e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s +100 s ^ -1 m * m +10 km ^ 2 / s -0 m ^ 2 / s -> m ^ 3 / m / s".split_whitespace().map(|s| s.to_string()).collect();
         assert_eq!(parsed, expected);
     }
 
     #[test]
-    pub fn test_parse_pos_neg_num() {
-        let input = "1+2";
-        let parser = parser();
-        let evaler = semanter();
+    pub fn test_conversion() {
+        let input = "1 m -> km";
         let tokens = tokenizer(input.chars());
-        let state = parser.parse(tokens).unwrap();
-        let out = evaler.eval(&state);
+        let state = parser().parse(tokens).unwrap();
+        let out = semanter().eval(&state);
+        let expected = Quantity {
+            value: 1e-3,
+            dimensions: Dimensions {
+                length: 1.,
+                ..Default::default()
+            },
+            units: Units {
+                length: kilometer,
+                ..Default::default()
+            },
+        };
+        assert_eq!(out, Ok(expected));
+    }
+
+    #[test]
+    pub fn test_eval_pos_neg_num() {
+        let input = "1+2";
+        let tokens = tokenizer(input.chars());
+        let state = parser().parse(tokens).unwrap();
+        let out = semanter().eval(&state);
         let expected = Quantity::from_value(3.);
         assert_eq!(out, Ok(expected));
 
         let input = "1m+2m";
         let tokens = tokenizer(input.chars());
-        let state = parser.parse(tokens).unwrap();
-        let out = evaler.eval(&state);
+        let state = parser().parse(tokens).unwrap();
+        let out = semanter().eval(&state);
         let expected = Quantity {
             value: 3.,
             dimensions: Dimensions {
