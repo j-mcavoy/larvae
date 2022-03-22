@@ -17,3 +17,4 @@ shunting = "0.0.9"
 rustyline = "5.0.0"
 lazy_static = "1.4.0"
 larvae_macros= { version = "*", path= "./larvae_macros"}
+float-pretty-print = "0.1.1"

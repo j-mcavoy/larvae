@@ -1,7 +1,7 @@
-use std::fmt::Display;
-
 use super::dimension::*;
 use super::unit::*;
+use float_pretty_print::PrettyPrintFloat;
+use std::fmt::Display;
 
 pub type StorageType = f64;
 
@@ -137,7 +137,13 @@ impl Display for Quantity {
             (0, _) => format!("1/{}", neg_units.join("·")),
             (_, _) => format!("{}/{}", pos_units.join("·"), neg_units.join("·")),
         };
-        write!(f, "{} {}", self.value, units)
+
+        let value = self.value;
+        if value == (value as i64) as f64 {
+            write!(f, "{} {}", value, units)
+        } else {
+            write!(f, "{:.8} {}", PrettyPrintFloat(value), units)
+        }
     }
 }
 
