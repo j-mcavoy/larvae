@@ -110,7 +110,7 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     });
     ev.action("expr -> expr [!]", |n| {
         let mut q = n[0];
-        q.value = gamma(q.value);
+        q.value = gamma(q.value + 1.);
         q
     });
 
