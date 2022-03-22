@@ -1,10 +1,7 @@
 use crate::{quantity::Quantity, unit::UNITS_LOOKUP};
 use earlgrey::EarleyParser;
 use lexers::Scanner;
-use std::{
-    fmt::Display,
-    str::{Chars},
-};
+use std::{fmt::Display, str::Chars};
 
 fn build_grammar() -> earlgrey::Grammar {
     use std::str::FromStr;
@@ -14,6 +11,8 @@ fn build_grammar() -> earlgrey::Grammar {
         .nonterm("expr")
         .nonterm("group")
         .nonterm("quantity")
+        .nonterm("+quantity")
+        .nonterm("-quantity")
         .nonterm("units")
         // operations
         .terminal("[+]", |n| n == "+")
@@ -31,6 +30,8 @@ fn build_grammar() -> earlgrey::Grammar {
         .terminal("pi", |n| n == "pi")
         // functions
         .terminal("log", |n| n == "log")
+        .terminal("+num", |n| n.starts_with("+") && f64::from_str(n).is_ok())
+        .terminal("-num", |n| n.starts_with("-") && f64::from_str(n).is_ok())
         .terminal("num", |n| f64::from_str(n).is_ok())
         .terminal("sqrt", |n| n == "sqrt")
         .terminal("unit", |n| UNITS_LOOKUP.contains_key(n))
@@ -45,10 +46,16 @@ fn build_grammar() -> earlgrey::Grammar {
         .rule("expr", &["expr", "[%]", "quantity"])
         .rule("expr", &["expr", "[!]"])
         .rule("expr", &["quantity"])
-        .rule("quantity", &["group", "[^]", "num"])
-        .rule("quantity", &["num", "[^]", "num"])
+        .rule("expr", &["expr", "+quantity"])
+        .rule("expr", &["expr", "-quantity"])
+        .rule("+quantity", &["+num", "units"])
+        .rule("+quantity", &["+num"])
+        .rule("-quantity", &["-num", "units"])
+        .rule("-quantity", &["-num"])
         .rule("quantity", &["num", "units"])
         .rule("quantity", &["num"])
+        .rule("quantity", &["group", "[^]", "num"])
+        .rule("quantity", &["num", "[^]", "num"])
         .rule("quantity", &["log", "group"])
         .rule("quantity", &["sqrt", "group"])
         .rule("quantity", &["e"])
@@ -60,13 +67,21 @@ fn build_grammar() -> earlgrey::Grammar {
         .rule("units", &["units", "[*]", "units"])
         .rule("units", &["unit"])
         .rule("num", &["num"])
+        .rule("+num", &["+num"])
+        .rule("-num", &["-num"])
         .into_grammar("equation")
         .expect("Bad Gramar")
 }
 
 pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     let mut ev = earlgrey::EarleyForest::new(symbol_match);
+
     ev.action("num -> num", |n| n[0]);
+    ev.action("num -> +num", |n| n[0]);
+    ev.action("num -> -num", |n| n[0]);
+
+    ev.action("+num -> +num", |n| n[0]);
+    ev.action("-num -> -num", |n| n[0]);
 
     ev.action("unit -> unit", |n| n[0]);
 
@@ -81,6 +96,9 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     ev.action("units -> units [/] units", |n| n[0].mul(&n[2].inv()));
 
     ev.action("expr -> quantity", |n| n[0]);
+    ev.action("expr -> expr +quantity", |n| n[0].add(&n[1]).unwrap());
+    ev.action("expr -> expr -quantity", |n| n[0].sub(&n[1]).unwrap());
+
     ev.action("expr -> expr [+] quantity", |n| n[0].add(&n[2]).unwrap());
     ev.action("expr -> expr [-] quantity", |n| n[0].sub(&n[2]).unwrap());
     ev.action("expr -> expr [*] quantity", |n| n[0].mul(&n[2]));
@@ -96,12 +114,23 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
         q
     });
 
-    ev.action("quantity -> group [^] num", |n| n[0].pow(n[2].value));
-    ev.action("quantity -> num [^] num", |n| n[0].pow(n[2].value));
+    ev.action("quantity -> num", |n| n[0]);
     ev.action("quantity -> num units", |n| {
         Quantity::new(n[0].value, n[1].dimensions, n[1].units)
     });
-    ev.action("quantity -> num", |n| n[0]);
+
+    ev.action("+quantity -> +num", |n| n[0]);
+    ev.action("+quantity -> +num units", |n| {
+        Quantity::new(n[0].value, n[1].dimensions, n[1].units)
+    });
+
+    ev.action("-quantity -> -num", |n| n[0]);
+    ev.action("-quantity -> -num units", |n| {
+        Quantity::new(n[0].value, n[1].dimensions, n[1].units)
+    });
+
+    ev.action("quantity -> group [^] num", |n| n[0].pow(n[2].value));
+    ev.action("quantity -> num [^] num", |n| n[0].pow(n[2].value));
     ev.action("quantity -> sqrt group", |n| {
         let mut q = n[1];
         q.value = q.value.sqrt();
@@ -126,6 +155,8 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
 
 fn symbol_match(symbol: &str, token: &str) -> Quantity {
     match symbol {
+        "+num" => Quantity::from_value(token.parse().unwrap()),
+        "-num" => Quantity::from_value(token.parse().unwrap()),
         "num" => Quantity::from_value(token.parse().unwrap()),
         "e" => Quantity::from_value(std::f64::consts::E),
         "pi" => Quantity::from_value(std::f64::consts::PI),
@@ -156,11 +187,11 @@ impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
         self.0.scan_whitespace();
         self.0
             .scan_number()
-            .or_else(|| self.0.scan_arrow())
             .or_else(|| self.0.scan_math_op())
+            .or_else(|| self.0.scan_arrow())
             .or_else(|| self.0.scan_identifier())
             .or_else(|| {
-                if let Some(unit) = self.0.custom_scan_unit() {
+                if let Some(unit) = self.0.larvae_scan_unit() {
                     Some(unit)
                 } else {
                     None
@@ -170,12 +201,12 @@ impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
 }
 
 trait LarvaeScanner {
-    fn custom_scan_unit(&mut self) -> Option<String>;
+    fn larvae_scan_unit(&mut self) -> Option<String>;
     fn scan_arrow(&mut self) -> Option<String>;
 }
 
 impl<I: Iterator<Item = char>> LarvaeScanner for Scanner<I> {
-    fn custom_scan_unit(&mut self) -> Option<String> {
+    fn larvae_scan_unit(&mut self) -> Option<String> {
         for unit in crate::unit::UNITS_LOOKUP.keys() {
             let backtrack = self.buffer_pos();
             if self.accept_all(unit.chars()) {
@@ -207,10 +238,10 @@ pub fn parser() -> EarleyParser {
 }
 
 #[cfg(test)]
-mod test {
-    
-
+mod tests {
     use super::*;
+    use crate::dimension::Dimensions;
+
     #[test]
     pub fn test_tokenizer() {
         let input = "-123.456 +1e4";
@@ -220,10 +251,36 @@ mod test {
     #[test]
     pub fn test_parse_dimunits() {
         let input =
-            "1 kg^ -2 kg kg * e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s";
+            "1kg^-2kg kg*e/e*log(10)*pi/pi*sqrt(1)!%2*1.123kilometer^2/s+100s^-1m*m+10km^2/s-0m^2/s-> m^3/m/s";
         let parsed: Vec<String> = tokenizer(input.chars()).collect();
         let expected: Vec<String> =
-            "1 kg ^ -2 kg kg * e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s".split_whitespace().map(|s| s.to_string()).collect();
+            "1 kg ^ -2 kg kg * e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s +100 s ^ -1 m * m +10 km ^ 2 / s -0 m ^ 2 / s - > m ^ 3 / m / s".split_whitespace().map(|s| s.to_string()).collect();
         assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    pub fn test_parse_pos_neg_num() {
+        let input = "1+2";
+        let parser = parser();
+        let evaler = semanter();
+        let tokens = tokenizer(input.chars());
+        let state = parser.parse(tokens).unwrap();
+        let out = evaler.eval(&state);
+        let expected = Quantity::from_value(3.);
+        assert_eq!(out, Ok(expected));
+
+        let input = "1m+2m";
+        let tokens = tokenizer(input.chars());
+        let state = parser.parse(tokens).unwrap();
+        let out = evaler.eval(&state);
+        let expected = Quantity {
+            value: 3.,
+            dimensions: Dimensions {
+                length: 1.,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert_eq!(out, Ok(expected));
     }
 }
