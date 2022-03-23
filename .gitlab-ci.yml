@@ -4,3 +4,7 @@ test:cargo:
   script:
     - rustc --version && cargo --version
     - cargo test --workspace --verbose
+    - cd crates/larvae_macros
+    - cargo test --workspace --verbose
+    - cd ../larvae_core
+    - cargo test --workspace --verbose
