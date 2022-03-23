@@ -1,0 +1,23 @@
+[package]
+name = "larvae_core"
+version = "0.1.0"
+edition = "2021"
+description = "Provides core for larvae cli"
+homepage = "https://gitlab.com/j-mcavoy/larvae"
+repository = "https://gitlab.com/j-mcavoy/larvae"
+license = "GPL-3.0-or-later"
+crate-type = ["lib"]
+keywords= [ "calculator", "dimensional analysis", "larvae", "science", "units"]
+
+[dependencies]
+earlgrey = "0.3.0"
+float-pretty-print = "0.1.1"
+larvae_macros= { version = "*", path= "../larvae_macros"}
+lazy_static = "1.4.0"
+lexers = "0.1.3"
+meval = "0.2.0"
+nom = "7.1.0"
+pom = "3.2.0"
+regex = "1.5.4"
+shunting = "0.0.9"
+log = "0.4.16"

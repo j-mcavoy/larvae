@@ -1,4 +1,4 @@
-# larvae
+# larvae_cli
 
 ![larvae](https://gitlab.com/uploads/-/system/project/avatar/32538279/larvae.jpg?width=64)
 
@@ -11,7 +11,7 @@ heavily inspired from [insect](https://github.com/sharkdp/insect)
 Command mode:
 
 ```bash
-$ larvae '1 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s'
+$ larvae '1kg^-2kg kg*e/e*ln(e)*pi/pi*sqrt(1)!%2*1.123kilometer^2/s+100s^-1m*m+10km^2/s-0m^2/s-> m^3/m/s'
 11123100 m²/s
 ```
 
@@ -19,7 +19,7 @@ Interactive mode:
 
 ```bash
 $ larvae
->>> 1 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s
+>>> 1kg^-2kg kg*e/e*log(10)*pi/pi*sqrt(1)!%2*1.123kilometer^2/s+100s^-1m*m+10km^2/s-0m^2/s-> m^3/m/s
 11123100 m²/s
 >>>
 ```
@@ -33,8 +33,8 @@ $ larvae
 
 ```bash
 $ hyperfine \
-    'insect "e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s"' \
-    'larvae "e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s"'
+    'insect "e/e*pi/pi*sqrt(1)%2*1.123kilometer^2/s+100s^-1 m*m+10km^2/s-0m^2/s->m^3/m/s"' \
+    'larvae "e/e*pi/pi*sqrt(1)%2*1.123kilometer^2/s+100s^-1 m*m+10km^2/s-0m^2/s->m^3/m/s"'
 Benchmark 1: insect "e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s + 100 s ^ -1 m * m + 10 km ^ 2 / s - 0 m ^ 2 / s -> m ^ 3 / m / s"
   Time (mean ± σ):     307.8 ms ±   4.4 ms    [User: 384.5 ms, System: 29.0 ms]
   Range (min … max):   301.2 ms … 314.0 ms    10 runs

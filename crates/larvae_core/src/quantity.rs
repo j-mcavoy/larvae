@@ -142,7 +142,7 @@ impl Display for Quantity {
         if value == (value as i64) as f64 {
             write!(f, "{} {}", value, units)
         } else {
-            write!(f, "{:.8} {}", PrettyPrintFloat(value), units)
+            write!(f, "{:.10} {}", PrettyPrintFloat(value), units)
         }
     }
 }
@@ -198,12 +198,12 @@ mod test {
     #[test]
     pub fn test_conversion_factor() {
         let m = Quantity {
-            units: Units::SI(),
             value: 2000.,
             dimensions: Dimensions {
                 length: 1.,
                 ..Default::default()
             },
+            ..Default::default()
         };
 
         assert_eq!(1., Quantity::conversion_factor(&m.units, &m.dimensions));
@@ -218,18 +218,17 @@ mod test {
                 ..Default::default()
             },
         };
-
         assert_eq!(1e9, Quantity::conversion_factor(&m.units, &m.dimensions));
     }
     #[test]
     pub fn test_convert_units() {
         let m = Quantity {
-            units: Units::SI(),
             value: 2000.,
             dimensions: Dimensions {
                 length: 1.,
                 ..Default::default()
             },
+            ..Default::default()
         };
         let converted = m.set_units(&Units::SI());
 
@@ -258,33 +257,33 @@ mod test {
     #[test]
     pub fn test_add() {
         let m = Quantity {
-            units: Units::SI(),
             value: 2.,
             dimensions: Dimensions {
                 length: 2.,
                 ..Default::default()
             },
+            ..Default::default()
         };
         let n = Quantity {
-            units: Units {
-                length: kilometer,
-                ..Units::SI()
-            },
             value: -20.,
             dimensions: Dimensions {
                 length: 2.,
                 ..Default::default()
+            },
+            units: Units {
+                length: kilometer,
+                ..Units::SI()
             },
         };
         let out = m.add(&n).unwrap();
         assert_eq!(
             Quantity {
                 value: -19999998.,
-                units: Units::SI(),
                 dimensions: Dimensions {
                     length: 2.,
                     ..Default::default()
                 },
+                ..Default::default()
             },
             out
         );
@@ -294,13 +293,13 @@ mod test {
     #[should_panic]
     pub fn test_incompatible_dimensions() {
         let m = Quantity {
-            units: Units::SI(),
             value: 2.,
             dimensions: Dimensions {
                 length: 3.,
                 mass: 1.,
                 ..Default::default()
             },
+            ..Default::default()
         };
         let n = Quantity {
             units: Units {
@@ -319,20 +318,20 @@ mod test {
     #[test]
     pub fn test_multiply() {
         let m = Quantity {
-            units: Units::SI(),
             value: 5.,
             dimensions: Dimensions {
                 length: 2.,
                 ..Default::default()
             },
+            ..Default::default()
         };
         let mut n = Quantity {
-            units: Units::SI(),
             value: 5.,
             dimensions: Dimensions {
                 length: 1.,
                 ..Default::default()
             },
+            ..Default::default()
         };
         let out = m.mul(&mut n);
         assert_eq!(
@@ -342,7 +341,7 @@ mod test {
                     length: 3.,
                     ..Default::default()
                 },
-                units: Units::SI()
+                ..Default::default()
             },
             out
         );
@@ -357,7 +356,7 @@ mod test {
                 mass: 2.,
                 ..Default::default()
             },
-            units: Units::SI(),
+            ..Default::default()
         };
         assert_eq!(q.to_string(), "25 kg²·m");
         let q = Quantity {
@@ -368,7 +367,7 @@ mod test {
                 time: -3.,
                 ..Default::default()
             },
-            units: Units::SI(),
+            ..Default::default()
         };
 
         assert_eq!(q.to_string(), "25 kg²·m/s³");
@@ -380,7 +379,7 @@ mod test {
                 mass: -2.,
                 ..Default::default()
             },
-            units: Units::SI(),
+            ..Default::default()
         };
         assert_eq!(q.to_string(), "25 1/kg²·m");
     }
