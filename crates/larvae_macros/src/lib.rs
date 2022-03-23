@@ -110,8 +110,8 @@ const BASE_DIMENSIONS: &[&str] = &["length", "mass", "time"];
 #[proc_macro]
 pub fn dimensions(input: TokenStream) -> TokenStream {
     let uss = parse_macro_input!(input as UnitSystems);
-    let mut mod_output = quote! {}.into();
-    let mut map_output = quote! {}.into();
+    let mut mod_output = quote! {};
+    let mut map_output = quote! {};
     for us in uss.0 {
         let dim_ident = str2ident(us.dimension.clone());
         let dim_enum = Ident::new(

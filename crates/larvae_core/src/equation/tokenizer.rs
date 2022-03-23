@@ -19,11 +19,7 @@ impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
             .or_else(|| self.0.scan_math_op())
             .or_else(|| self.0.scan_identifier())
             .or_else(|| {
-                if let Some(unit) = self.0.larvae_scan_unit() {
-                    Some(unit)
-                } else {
-                    None
-                }
+                self.0.larvae_scan_unit()
             })
     }
 }
@@ -63,7 +59,7 @@ pub fn tokenizer<I: Iterator<Item = char>>(input: I) -> Tokenizer<I> {
 
 #[cfg(test)]
 mod tests {
-    use std::fmt::format;
+    
 
     use super::super::build_parser;
     use super::super::build_semanter;

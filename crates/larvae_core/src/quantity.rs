@@ -114,7 +114,7 @@ impl Display for Quantity {
         let mut pos_units = vec![];
         for (sym, dim) in pos_dims.clone() {
             pos_units.push(if dim == 1.0 {
-                format!("{}", sym)
+                sym.to_string()
             } else if dim == (dim as i64) as f64 {
                 format!("{}{}", sym, num_to_superscript(dim as i64))
             } else {
@@ -124,7 +124,7 @@ impl Display for Quantity {
         let mut neg_units = vec![];
         for (sym, dim) in neg_dims.clone() {
             neg_units.push(if dim == 1.0 {
-                format!("{}", sym)
+                sym.to_string()
             } else if dim == (dim as i64) as f64 {
                 format!("{}{}", sym, num_to_superscript(dim as i64))
             } else {
@@ -177,7 +177,7 @@ fn num_to_superscript(n: i64) -> String {
         } else {
             ""
         };
-        num = num / 10;
+        num /= 10;
         if num == 0 {
             if n.is_negative() {
                 out += "⁻";

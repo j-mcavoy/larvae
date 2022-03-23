@@ -29,10 +29,10 @@ pub fn build_grammar() -> Grammar {
         // functions
         .terminal("ln", |n| n == "ln")
         .terminal("log", |n| n == "log")
-        .terminal("+num", |n| n.starts_with("+") && f64::from_str(n).is_ok())
-        .terminal("-num", |n| n.starts_with("-") && f64::from_str(n).is_ok())
+        .terminal("+num", |n| n.starts_with('+') && f64::from_str(n).is_ok())
+        .terminal("-num", |n| n.starts_with('-') && f64::from_str(n).is_ok())
         .terminal("num", |n| {
-            !n.starts_with("+") && !n.starts_with("-") && f64::from_str(n).is_ok()
+            !n.starts_with('+') && !n.starts_with('-') && f64::from_str(n).is_ok()
         })
         .terminal("sqrt", |n| n == "sqrt")
         .terminal("unit", |n| UNITS_LOOKUP.contains_key(n))

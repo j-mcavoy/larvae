@@ -6,7 +6,6 @@ description = "Provides core for larvae cli"
 homepage = "https://gitlab.com/j-mcavoy/larvae"
 repository = "https://gitlab.com/j-mcavoy/larvae"
 license = "GPL-3.0-or-later"
-crate-type = ["lib"]
 keywords= [ "calculator", "dimensional analysis", "larvae", "science", "units"]
 
 [dependencies]
