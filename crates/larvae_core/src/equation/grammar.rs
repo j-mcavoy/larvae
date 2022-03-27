@@ -50,6 +50,9 @@ pub fn build_grammar() -> Grammar {
         .rule("expr", &["quantity"])
         .rule("expr", &["expr", "+quantity"])
         .rule("expr", &["expr", "-quantity"])
+        .rule("expr", &["expr", "group"])
+        .rule("expr", &["group"])
+        .rule("expr", &["num"])
         .rule("+quantity", &["+num", "units"])
         .rule("+quantity", &["+num"])
         .rule("-quantity", &["-num", "units"])
@@ -58,6 +61,8 @@ pub fn build_grammar() -> Grammar {
         .rule("quantity", &["num"])
         .rule("quantity", &["group", "[^]", "num"])
         .rule("quantity", &["num", "[^]", "num"])
+        .rule("quantity", &["num", "[^]", "+num"])
+        .rule("quantity", &["num", "[^]", "-num"])
         .rule("quantity", &["log", "group"])
         .rule("quantity", &["ln", "group"])
         .rule("quantity", &["sqrt", "group"])
@@ -70,6 +75,7 @@ pub fn build_grammar() -> Grammar {
         .rule("units", &["units", "[*]", "units"])
         .rule("units", &["unit"])
         .rule("num", &["num"])
+        .rule("num", &["num", "[^]", "num"])
         .rule("+num", &["+num"])
         .rule("-num", &["-num"])
         .into_grammar("equation")
@@ -79,18 +85,23 @@ pub fn build_grammar() -> Grammar {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use earlgrey::EarleyParser;
+    fn parse_test(input: &str) -> bool {
+        let grammar = build_grammar();
+        EarleyParser::new(grammar)
+            .parse(input.split_whitespace())
+            .is_ok()
+    }
     #[test]
     fn test_basic_arithmetic() {
-        let grammar = build_grammar();
-        let input = "1. + 1 - 2 * 10.34 / .5".split_whitespace();
-        let parsed = earlgrey::EarleyParser::new(grammar).parse(input);
-        assert!(parsed.is_ok());
+        assert!(parse_test("1. + 1 - 2 * 10.34 / .5"));
+        assert!(parse_test("80 - 4 - 4"));
+        assert!(parse_test("80 -4 -4"));
+        assert!(parse_test("( 2 ) ( 2 )"));
     }
     #[test]
     fn test_dimensional_analysis() {
-        let grammar = build_grammar();
-        let input = "1. m / s ^ 2 + 1 m / s ^ 2 - 2 m / s ^ 2".split_whitespace();
-        let parsed = earlgrey::EarleyParser::new(grammar).parse(input);
-        assert!(parsed.is_ok());
+        assert!(parse_test("1. m / s ^ 2 + 1 m / s ^ 2 - 2 m / s ^ 2"));
+        assert!(parse_test("10 ^ -1 s"));
     }
 }

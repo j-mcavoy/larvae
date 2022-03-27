@@ -1,8 +1,8 @@
-pub mod grammer;
+pub mod grammar;
 pub mod semanter;
 pub mod tokenizer;
 use earlgrey::EarleyParser;
-pub use grammer::build_grammar;
+pub use grammar::build_grammar;
 pub use semanter::build_semanter;
 
 pub fn build_parser() -> EarleyParser {
