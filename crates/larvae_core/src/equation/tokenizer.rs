@@ -18,9 +18,7 @@ impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
             .or_else(|| self.0.scan_arrow())
             .or_else(|| self.0.scan_math_op())
             .or_else(|| self.0.scan_identifier())
-            .or_else(|| {
-                self.0.larvae_scan_unit()
-            })
+            .or_else(|| self.0.larvae_scan_unit())
     }
 }
 
@@ -59,7 +57,6 @@ pub fn tokenizer<I: Iterator<Item = char>>(input: I) -> Tokenizer<I> {
 
 #[cfg(test)]
 mod tests {
-    
 
     use super::super::build_parser;
     use super::super::build_semanter;
@@ -121,7 +118,9 @@ mod tests {
         token_test("log(5)", "log ( 5 )");
         token_test("ln(5)", "ln ( 5 )");
         token_test("e^4", "e ^ 4");
+        token_test("e^-4", "e ^ -4");
         token_test("pi - 4", "pi - 4");
+        token_test("(2)(2)", "( 2 ) ( 2 )");
     }
     #[test]
     pub fn test_eval_pos_neg_num() {

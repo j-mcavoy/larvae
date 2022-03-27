@@ -29,9 +29,12 @@ pub fn build_semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     debug_action!(ev, "units -> units [/] units", n, n[0].mul(&n[2].inv()));
 
     debug_action!(ev, "expr -> quantity", n, n[0]);
+    debug_action!(ev, "expr -> num", n, n[0]);
+    debug_action!(ev, "expr -> group", n, n[0]);
+    debug_action!(ev, "expr -> expr group", n, n[0].mul(&n[1]));
     debug_action!(ev, "expr -> expr quantity", n, n[0].mul(&n[1]));
     debug_action!(ev, "expr -> expr +quantity", n, n[0].add(&n[1]).unwrap());
-    debug_action!(ev, "expr -> expr -quantity", n, n[0].sub(&n[1]).unwrap());
+    debug_action!(ev, "expr -> expr -quantity", n, n[0].add(&n[1]).unwrap());
 
     debug_action!(ev, "expr -> expr [+] quantity", n, n[0].add(&n[2]).unwrap());
     debug_action!(ev, "expr -> expr [-] quantity", n, n[0].sub(&n[2]).unwrap());
@@ -65,6 +68,8 @@ pub fn build_semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
 
     debug_action!(ev, "quantity -> group [^] num", n, n[0].pow(n[2].value));
     debug_action!(ev, "quantity -> num [^] num", n, n[0].pow(n[2].value));
+    debug_action!(ev, "quantity -> num [^] +num", n, n[0].pow(n[2].value));
+    debug_action!(ev, "quantity -> num [^] -num", n, n[0].pow(n[2].value));
     debug_action!(ev, "quantity -> sqrt group", n, {
         let mut q = n[1];
         q.value = q.value.sqrt();
