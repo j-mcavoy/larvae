@@ -9,7 +9,7 @@ macro_rules! debug_action {
         });
     };
 }
-pub fn build_semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
+pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     let mut ev = earlgrey::EarleyForest::new(symbol_match);
 
     debug_action!(ev, "num -> num", n, n[0]);
@@ -97,6 +97,14 @@ pub fn build_semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
     ev
 }
 
+#[link(name = "m")]
+extern "C" {
+    fn tgamma(x: f64) -> f64;
+}
+fn gamma(x: f64) -> f64 {
+    unsafe { tgamma(x) }
+}
+
 fn symbol_match(symbol: &str, token: &str) -> Quantity {
     let out = match symbol {
         "+num" => Quantity::from_value(token.parse().unwrap()),
@@ -111,10 +119,30 @@ fn symbol_match(symbol: &str, token: &str) -> Quantity {
     out
 }
 
-fn gamma(x: f64) -> f64 {
-    #[link(name = "m")]
-    extern "C" {
-        fn tgamma(x: f64) -> f64;
+#[cfg(test)]
+mod tests {
+    use super::super::*;
+    use super::*;
+    use crate::quantity::Quantity;
+
+    fn eval_test(input: &str) -> Result<Quantity, std::string::String> {
+        let parser = parser();
+        let semanter = semanter();
+        let tokens = tokenizer(input.chars());
+        semanter.eval(&parser.parse(tokens).unwrap())
     }
-    unsafe { tgamma(x) }
+
+    #[test]
+    fn test_eval_basic_arithmetic() {
+        assert_eq!(eval_test("80 - 4 - 4").unwrap(), Quantity::from_value(72.));
+        assert_eq!(eval_test("80-4-4").unwrap(), Quantity::from_value(72.));
+        assert_eq!(eval_test("80+4+4").unwrap(), Quantity::from_value(88.));
+        assert_eq!(eval_test("2+2").unwrap(), Quantity::from_value(4.));
+        assert_eq!(eval_test("-2-2").unwrap(), Quantity::from_value(-4.));
+    }
+    #[test]
+    fn test_dimensional_arithmetic() {
+        let input = "1m+2m";
+        assert!(eval_test(input).is_ok());
+    }
 }

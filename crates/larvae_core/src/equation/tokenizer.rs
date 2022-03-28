@@ -1,14 +1,17 @@
 use lexers::Scanner;
 use std::{fmt::Display, str::Chars};
 
+trait LarvaeScanner {
+    fn larvae_scan_unit(&mut self) -> Option<String>;
+    fn scan_arrow(&mut self) -> Option<String>;
+    fn scan_unknown(&mut self) -> Option<String>;
+}
 pub struct Tokenizer<I: Iterator<Item = char>>(lexers::Scanner<I>);
-
 impl<'a> Display for Tokenizer<Chars<'a>> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", *self)
     }
 }
-
 impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
     type Item = String;
     fn next(&mut self) -> Option<String> {
@@ -19,14 +22,9 @@ impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
             .or_else(|| self.0.scan_math_op())
             .or_else(|| self.0.scan_identifier())
             .or_else(|| self.0.larvae_scan_unit())
+            .or_else(|| self.0.scan_unknown())
     }
 }
-
-trait LarvaeScanner {
-    fn larvae_scan_unit(&mut self) -> Option<String>;
-    fn scan_arrow(&mut self) -> Option<String>;
-}
-
 impl<I: Iterator<Item = char>> LarvaeScanner for Scanner<I> {
     fn larvae_scan_unit(&mut self) -> Option<String> {
         for unit in crate::unit::UNITS_LOOKUP.keys() {
@@ -49,6 +47,14 @@ impl<I: Iterator<Item = char>> LarvaeScanner for Scanner<I> {
         }
         None
     }
+
+    fn scan_unknown(&mut self) -> Option<String> {
+        if let Some(c) = self.next() {
+            Some(c.to_string())
+        } else {
+            None
+        }
+    }
 }
 
 pub fn tokenizer<I: Iterator<Item = char>>(input: I) -> Tokenizer<I> {
@@ -58,8 +64,7 @@ pub fn tokenizer<I: Iterator<Item = char>>(input: I) -> Tokenizer<I> {
 #[cfg(test)]
 mod tests {
 
-    use super::super::build_parser;
-    use super::super::build_semanter;
+    use super::super::*;
     use super::*;
     use crate::quantity::*;
     use crate::unit::length::Length::*;
@@ -76,8 +81,8 @@ mod tests {
     pub fn test_conversion() {
         let input = "1 m -> km";
         let tokens = tokenizer(input.chars());
-        let state = build_parser().parse(tokens).unwrap();
-        let out = build_semanter().eval(&state);
+        let state = parser().parse(tokens).unwrap();
+        let out = semanter().eval(&state);
         let expected = Quantity {
             value: 1e-3,
             dimensions: Dimensions {
@@ -143,6 +148,11 @@ mod tests {
                 format!("123 {0} + 3 {0} / {0} * {0}", unit).as_str(),
             );
         }
+    }
+    #[test]
+    pub fn test_unknown_tokens() {
+        token_test("1m&^9", "1 m & ^ 9");
+        token_test("1m&$#^9", "1 m & $ # ^ 9");
     }
     fn token_test(input: &str, expected: &str) {
         let tokens: Vec<String> = tokenizer(input.chars()).collect();

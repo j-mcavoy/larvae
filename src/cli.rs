@@ -1,4 +1,4 @@
-use larvae_core::equation::{build_parser, semanter::build_semanter, tokenizer::tokenizer};
+use larvae_core::equation::*;
 use log::debug;
 use std::cell::RefCell;
 
@@ -17,8 +17,8 @@ impl Cli {
                     .map(|i| i.unwrap()),
             )
         };
-        let parser = build_parser();
-        let evaler = build_semanter();
+        let parser = parser();
+        let evaler = semanter();
         for expr in input {
             let tokens = tokenizer(expr.chars());
             debug!("tokens: {:?}", tokens.collect::<Vec<String>>());

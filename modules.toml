@@ -1,0 +1,3 @@
+[[module]]
+route = "/larvae_cli"
+module = "./target/wasm32-wasi/debug/larvae.wasm"

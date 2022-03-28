@@ -1,8 +1,13 @@
 use crate::unit::UNITS_LOOKUP;
+use earlgrey::EarleyParser;
 use earlgrey::{Grammar, GrammarBuilder};
 use std::str::FromStr;
 
-pub fn build_grammar() -> Grammar {
+pub fn parser() -> EarleyParser {
+    EarleyParser::new(grammar())
+}
+
+fn grammar() -> Grammar {
     GrammarBuilder::default()
         // non-terminals
         .nonterm("equation")
@@ -87,7 +92,7 @@ mod tests {
     use super::*;
     use earlgrey::EarleyParser;
     fn parse_test(input: &str) -> bool {
-        let grammar = build_grammar();
+        let grammar = grammar();
         EarleyParser::new(grammar)
             .parse(input.split_whitespace())
             .is_ok()
