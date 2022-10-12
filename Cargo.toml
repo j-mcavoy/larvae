@@ -10,8 +10,22 @@ license = "GPL-2.0-or-later WITH Bison-exception-2.2"
 name = "larvae"
 path = "src/main.rs"
 
+[workspace]
+members = [
+    "./macros"
+]
+
 [dependencies]
-larvae_core= { version = "*", path= "./crates/larvae_core"}
-rustyline = "5.0.0"
-log = { version="0.4.16", features = ["release_max_level_off"] }
+earlgrey = "0.3.0"
 env_logger = "0.9.0"
+float-pretty-print = "0.1.1"
+larvae_macros= { version = "*", path= "./macros"}
+lazy_static = "1.4.0"
+lexers = "0.1.3"
+log = { version="0.4.16", features = ["release_max_level_off"] }
+meval = "0.2.0"
+nom = "7.1.0"
+pom = "3.2.0"
+regex = "1.5.4"
+rustyline = "9.1.2"
+shunting = "0.0.9"

@@ -1,4 +1,4 @@
-pub type StorageType = f64;
+type StorageType = f64;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DimensionError(pub Dimensions, pub Dimensions);
@@ -8,7 +8,6 @@ pub struct Dimensions {
     pub length: StorageType,
     pub mass: StorageType,
     pub time: StorageType,
-    //    time: Dim,
     //    current: Dim,
     //    temprature: Dim,
     //    luminous_intensity: Dim,
@@ -22,7 +21,7 @@ impl Dimensions {
             time: self.time * x,
         }
     }
-    pub fn _mul(&self, r: &Self) -> Self {
+    pub fn mul(&self, r: &Self) -> Self {
         Self {
             length: self.length + r.length,
             mass: self.mass + r.mass,
@@ -62,7 +61,7 @@ mod test {
         };
 
         assert_eq!(
-            d._mul(&Dimensions {
+            d.mul(&Dimensions {
                 length: -1.,
                 mass: 2.,
                 ..Default::default()

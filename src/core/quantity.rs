@@ -68,7 +68,7 @@ impl Quantity {
         let r_converted = r.set_units(&self.units.clone());
         Self {
             value: self.value * r_converted.value,
-            dimensions: self.dimensions._mul(&r.dimensions),
+            dimensions: self.dimensions.mul(&r.dimensions),
             ..*self
         }
     }
@@ -192,8 +192,8 @@ fn num_to_superscript(n: i64) -> String {
 mod test {
 
     use super::*;
-    use crate::unit::length::Length::*;
-    use crate::unit::Units;
+    use crate::core::unit::length::Length::*;
+    use crate::core::unit::Units;
 
     #[test]
     pub fn test_conversion_factor() {

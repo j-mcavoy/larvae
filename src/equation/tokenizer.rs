@@ -27,7 +27,7 @@ impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
 }
 impl<I: Iterator<Item = char>> LarvaeScanner for Scanner<I> {
     fn larvae_scan_unit(&mut self) -> Option<String> {
-        for unit in crate::unit::UNITS_LOOKUP.keys() {
+        for unit in crate::core::unit::UNITS_LOOKUP.keys() {
             let backtrack = self.buffer_pos();
             if self.accept_all(unit.chars()) {
                 return Some(unit.to_string());
@@ -49,11 +49,7 @@ impl<I: Iterator<Item = char>> LarvaeScanner for Scanner<I> {
     }
 
     fn scan_unknown(&mut self) -> Option<String> {
-        if let Some(c) = self.next() {
-            Some(c.to_string())
-        } else {
-            None
-        }
+        self.next().map(|c| c.to_string())
     }
 }
 
@@ -66,9 +62,9 @@ mod tests {
 
     use super::super::*;
     use super::*;
-    use crate::quantity::*;
-    use crate::unit::length::Length::*;
-    use crate::{dimension::Dimensions, unit::Units};
+    use crate::core::quantity::*;
+    use crate::core::unit::length::Length::*;
+    use crate::core::{dimension::Dimensions, unit::Units};
 
     #[test]
     pub fn test_parse_dimunits() {
@@ -142,7 +138,7 @@ mod tests {
 
     #[test]
     pub fn test_all_units() {
-        for unit in crate::unit::UNITS_LOOKUP.keys() {
+        for unit in crate::core::unit::UNITS_LOOKUP.keys() {
             token_test(
                 format!("123{0}+ 3{0}/{0}*{0}", unit).as_str(),
                 format!("123 {0} + 3 {0} / {0} * {0}", unit).as_str(),

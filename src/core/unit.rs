@@ -1,6 +1,6 @@
 use super::dimension::Dimensions;
+use super::quantity::Quantity;
 use super::quantity::StorageType;
-use crate::quantity::Quantity;
 use larvae_macros::dimensions;
 use lazy_static::lazy_static;
 use std::collections::HashMap;

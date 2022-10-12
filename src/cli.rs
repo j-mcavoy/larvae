@@ -1,4 +1,4 @@
-use larvae_core::equation::*;
+use crate::equation::*;
 use log::debug;
 use std::cell::RefCell;
 

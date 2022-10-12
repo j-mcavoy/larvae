@@ -1,4 +1,4 @@
-use crate::unit::UNITS_LOOKUP;
+use crate::core::unit::UNITS_LOOKUP;
 use earlgrey::EarleyParser;
 use earlgrey::{Grammar, GrammarBuilder};
 use std::str::FromStr;
@@ -14,8 +14,6 @@ fn grammar() -> Grammar {
         .nonterm("expr")
         .nonterm("group")
         .nonterm("quantity")
-        .nonterm("+quantity")
-        .nonterm("-quantity")
         .nonterm("units")
         // operations
         .terminal("[+]", |n| n == "+")
@@ -53,21 +51,13 @@ fn grammar() -> Grammar {
         .rule("expr", &["expr", "[/]", "quantity"])
         .rule("expr", &["expr", "[%]", "quantity"])
         .rule("expr", &["quantity"])
-        .rule("expr", &["expr", "+quantity"])
-        .rule("expr", &["expr", "-quantity"])
         .rule("expr", &["expr", "group"])
         .rule("expr", &["group"])
-        .rule("expr", &["num"])
-        .rule("+quantity", &["+num", "units"])
-        .rule("+quantity", &["+num"])
-        .rule("-quantity", &["-num", "units"])
-        .rule("-quantity", &["-num"])
+        .rule("expr", &["num", "[^]", "num"])
         .rule("quantity", &["num", "units"])
+        .rule("quantity", &["expr", "units"])
         .rule("quantity", &["num"])
         .rule("quantity", &["group", "[^]", "num"])
-        .rule("quantity", &["num", "[^]", "num"])
-        .rule("quantity", &["num", "[^]", "+num"])
-        .rule("quantity", &["num", "[^]", "-num"])
         .rule("quantity", &["log", "group"])
         .rule("quantity", &["ln", "group"])
         .rule("quantity", &["sqrt", "group"])
@@ -80,26 +70,28 @@ fn grammar() -> Grammar {
         .rule("units", &["units", "[*]", "units"])
         .rule("units", &["unit"])
         .rule("num", &["num"])
+        .rule("num", &["num", "num"])
         .rule("num", &["num", "[^]", "num"])
-        .rule("+num", &["+num"])
-        .rule("-num", &["-num"])
         .into_grammar("equation")
-        .expect("Bad Gramar")
+        .expect("Bad Grammar")
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use earlgrey::EarleyParser;
+
+    #[inline]
     fn parse_test(input: &str) -> bool {
-        let grammar = grammar();
-        EarleyParser::new(grammar)
-            .parse(input.split_whitespace())
-            .is_ok()
+        parser().parse(input.split_whitespace()).is_ok()
     }
     #[test]
+    fn test_grammar_ok() {
+        grammar();
+    }
+
+    #[test]
     fn test_basic_arithmetic() {
-        assert!(parse_test("1. + 1 - 2 * 10.34 / .5"));
+        assert!(parse_test("1. + 1 - 2 * 10.34 / 0.5"));
         assert!(parse_test("80 - 4 - 4"));
         assert!(parse_test("80 -4 -4"));
         assert!(parse_test("( 2 ) ( 2 )"));
@@ -107,6 +99,7 @@ mod tests {
     #[test]
     fn test_dimensional_analysis() {
         assert!(parse_test("1. m / s ^ 2 + 1 m / s ^ 2 - 2 m / s ^ 2"));
+        assert!(parse_test("10 ^ 1 s"));
         assert!(parse_test("10 ^ -1 s"));
     }
 }
