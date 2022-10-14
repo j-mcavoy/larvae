@@ -173,6 +173,7 @@ pub fn dimensions(input: TokenStream) -> TokenStream {
                 use super::*;
                 use #dim_enum::*;
 
+                #[allow(non_camel_case_types)]
                 #[derive(Debug, Clone, Copy, PartialEq)]
                 pub enum #dim_enum {
                     #(#names_ident),*
