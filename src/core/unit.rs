@@ -1,6 +1,6 @@
 use super::dimension::Dimensions;
 use super::quantity::Quantity;
-use super::quantity::StorageType;
+use super::quantity::QuantityFloat;
 use larvae_macros::dimensions;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
@@ -20,7 +20,7 @@ dimensions! {
 }
 
 pub trait Unit {
-    fn conversion_factor(&self) -> StorageType;
+    fn conversion_factor(&self) -> QuantityFloat;
     fn abbrev(&self) -> &'static str;
     fn name(&self) -> &'static str;
     fn symbol(&self) -> &'static str;

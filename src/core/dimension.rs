@@ -1,20 +1,20 @@
-type StorageType = f64;
+type DimensionFloat = f64;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct DimensionError(pub Dimensions, pub Dimensions);
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Dimensions {
-    pub length: StorageType,
-    pub mass: StorageType,
-    pub time: StorageType,
+    pub length: DimensionFloat,
+    pub mass: DimensionFloat,
+    pub time: DimensionFloat,
     //    current: Dim,
     //    temprature: Dim,
     //    luminous_intensity: Dim,
     //    money: Dim,
 }
 impl Dimensions {
-    pub fn pow(&self, x: StorageType) -> Self {
+    pub fn pow(&self, x: DimensionFloat) -> Self {
         Self {
             length: self.length * x,
             mass: self.mass * x,

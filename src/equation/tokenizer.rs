@@ -60,37 +60,13 @@ pub fn tokenizer<I: Iterator<Item = char>>(input: I) -> Tokenizer<I> {
 #[cfg(test)]
 mod tests {
 
-    use super::super::*;
     use super::*;
-    use crate::core::quantity::*;
-    use crate::core::unit::length::Length::*;
-    use crate::core::{dimension::Dimensions, unit::Units};
 
     #[test]
     pub fn test_parse_dimunits() {
         token_test(
             "1kg^-2kg kg*e/e*log(10)*pi/pi*sqrt(1)!%2*1.123kilometer^2/s+100s^-1m*m+10km^2/s-0m^2/s-> m^3/m/s",
             "1 kg ^ -2 kg kg * e / e * log ( 10 ) * pi / pi * sqrt ( 1 ) ! % 2 * 1.123 kilometer ^ 2 / s +100 s ^ -1 m * m +10 km ^ 2 / s -0 m ^ 2 / s -> m ^ 3 / m / s");
-    }
-
-    #[test]
-    pub fn test_conversion() {
-        let input = "1 m -> km";
-        let tokens = tokenizer(input.chars());
-        let state = parser().parse(tokens).unwrap();
-        let out = semanter().eval(&state);
-        let expected = Quantity {
-            value: 1e-3,
-            dimensions: Dimensions {
-                length: 1.,
-                ..Default::default()
-            },
-            units: Units {
-                length: kilometer,
-                ..Default::default()
-            },
-        };
-        assert_eq!(out, Ok(expected));
     }
 
     #[test]
