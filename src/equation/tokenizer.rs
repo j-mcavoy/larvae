@@ -1,5 +1,4 @@
 use lexers::Scanner;
-use std::{fmt::Display, str::Chars};
 
 trait LarvaeScanner {
     fn larvae_scan_unit(&mut self) -> Option<String>;
@@ -7,11 +6,6 @@ trait LarvaeScanner {
     fn scan_unknown(&mut self) -> Option<String>;
 }
 pub struct Tokenizer<I: Iterator<Item = char>>(lexers::Scanner<I>);
-impl<'a> Display for Tokenizer<Chars<'a>> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", *self)
-    }
-}
 impl<I: Iterator<Item = char>> Iterator for Tokenizer<I> {
     type Item = String;
     fn next(&mut self) -> Option<String> {
