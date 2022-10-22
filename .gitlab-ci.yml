@@ -2,7 +2,10 @@ image: rustlang/rust:nightly
 
 test:cargo:
   script:
-    - rustc --version && cargo --version
+    - rustc --version
+    - cargo --version
+    - cargo fmt --check --verbose
+    - cargo clippy -- -Dwarnings
     - cargo test --workspace --verbose
     - cd crates/larvae_macros
     - cargo test --workspace --verbose
