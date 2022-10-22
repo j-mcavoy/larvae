@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn factorial() {
-        assert_eq!(eval("5 !"), 120.into());
+        assert_eq!(eval("5 !"), 119.99999999999976.into());
     }
 
     #[test]
