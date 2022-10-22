@@ -2,6 +2,7 @@ use crate::core::{
     quantity::{Quantity, QuantityFloat},
     unit::UNITS_LOOKUP,
 };
+use factorial::Factorial;
 use log::debug;
 
 fn symbol_match(symbol: &str, token: &str) -> Quantity {
@@ -50,7 +51,11 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
 
         "ufact -> group",        n[0],
         "ufact -> ufact !",
-                                (TryInto::<QuantityFloat>::try_into(n[0]).unwrap() + 1.0).into(),
+                                {
+                                    let float: f64 = n[0].try_into().unwrap();
+                                    let int: u64 = float as u64;
+                                    (int.factorial() as QuantityFloat).into()
+                                },
         "quantity -> [n]",      n[0],
         "quantity -> [n] units",
                                 Quantity::new(n[0].value, n[1].dimensions, n[1].units),
@@ -63,102 +68,6 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
                                 n[0].set_units(&n[2].units)
     }
     ev
-
-    //    debug_action!(ev, "num -> _num", n, n[0]);
-    //    debug_action!(ev, "_num -> _num", n, n[0]);
-    //    debug_action!(ev, "+num -> +num", n, n[0]);
-    //    debug_action!(ev, "-num -> -num", n, n[0]);
-    //
-    //    debug_action!(ev, "unit -> unit", n, n[0]);
-    //
-    //    debug_action!(ev, "units -> unit [^] num", n, {
-    //        let mut q = n[0];
-    //        q.dimensions = n[0].dimensions.pow(n[2].value);
-    //        q
-    //    });
-    //    debug_action!(ev, "units -> unit", n, n[0]);
-    //    debug_action!(ev, "units -> units units", n, n[0].mul(&n[1]));
-    //    debug_action!(ev, "units -> units [*] units", n, n[0].mul(&n[2]));
-    //    debug_action!(ev, "units -> units [/] units", n, n[0].div(&n[2]));
-    //
-    //    debug_action!(ev, "expr -> quantity", n, n[0]);
-    //    debug_action!(ev, "expr -> num", n, n[0]);
-    //    debug_action!(ev, "expr -> group", n, n[0]);
-    //    debug_action!(ev, "expr -> expr group", n, n[0].mul(&n[1]));
-    //    debug_action!(ev, "expr -> expr quantity", n, n[0].mul(&n[1]));
-    //
-    //    debug_action!(ev, "expr -> expr [*] quantity", n, n[0].mul(&n[2]));
-    //    debug_action!(ev, "expr -> expr [/] quantity", n, n[0].div(&n[2]));
-    //    debug_action!(ev, "expr -> expr [%] quantity", n, {
-    //        let mut q = n[0];
-    //        q.value %= n[2].value;
-    //        q
-    //    });
-    //    debug_action!(ev, "expr -> expr [+] quantity", n, n[0].add(&n[2]).unwrap());
-    //    debug_action!(ev, "expr -> expr [-] quantity", n, n[0].sub(&n[2]).unwrap());
-    //    debug_action!(ev, "expr -> expr [+] quantity", n, n[0].add(&n[2]).unwrap());
-    //    debug_action!(ev, "expr -> expr [-] quantity", n, n[0].sub(&n[2]).unwrap());
-    //    debug_action!(ev, "num -> num [!]", n, {
-    //        let mut q = n[0];
-    //        q.value = gamma(q.value + 1.);
-    //        q
-    //    });
-    //
-    //    debug_action!(ev, "quantity -> num", n, n[0]);
-    //    debug_action!(ev, "quantity -> num units", n, {
-    //        Quantity::new(n[0].value, n[1].dimensions, n[1].units)
-    //    });
-    //
-    //    debug_action!(ev, "+quantity -> +num", n, n[0]);
-    //    debug_action!(ev, "+quantity -> +num units", n, {
-    //        Quantity::new(n[0].value, n[1].dimensions, n[1].units)
-    //    });
-    //
-    //    debug_action!(ev, "-quantity -> -num", n, n[0]);
-    //    debug_action!(ev, "-quantity -> -num units", n, {
-    //        Quantity::new(n[0].value, n[1].dimensions, n[1].units)
-    //    });
-    //    debug_action!(ev, "quantity -> expr units", n, {
-    //        Quantity::new(n[0].value, n[1].dimensions, n[1].units)
-    //    });
-    //
-    //    debug_action!(ev, "quantity -> group [^] num", n, n[0].pow(n[2].value));
-    //    debug_action!(ev, "quantity -> num [^] num", n, n[0].pow(n[2].value));
-    //    debug_action!(ev, "quantity -> num [^] +num", n, n[0].pow(n[2].value));
-    //    debug_action!(ev, "quantity -> num [^] -num", n, n[0].pow(n[2].value));
-    //    debug_action!(ev, "group -> group [^] num", n, n[0].pow(n[2].value));
-    //    debug_action!(ev, "expr -> num [^] num", n, n[0].pow(n[2].value));
-    //    debug_action!(ev, "expr -> num [^] +num", n, n[0].pow(n[2].value));
-    //    debug_action!(ev, "expr -> num [^] -num", n, n[0].pow(n[2].value));
-    //    debug_action!(ev, "quantity -> sqrt group", n, {
-    //        let mut q = n[1];
-    //        q.value = q.value.sqrt();
-    //        q
-    //    });
-    //    debug_action!(ev, "quantity -> log group", n, {
-    //        let mut q = n[1];
-    //        q.value = q.value.log10();
-    //        q
-    //    });
-    //    debug_action!(ev, "quantity -> ln group", n, {
-    //        let mut q = n[1];
-    //        q.value = q.value.ln();
-    //        q
-    //    });
-    //    debug_action!(ev, "quantity -> e", n, n[0]);
-    //    debug_action!(ev, "quantity -> pi", n, n[0]);
-    //
-    //    debug_action!(ev, "group -> ( expr )", n, n[1]);
-    //
-    //    debug_action!(ev, "equation -> expr", n, n[0]);
-}
-
-#[link(name = "m")]
-extern "C" {
-    fn tgamma(x: f64) -> f64;
-}
-fn gamma(x: f64) -> f64 {
-    unsafe { tgamma(x) }
 }
 
 #[cfg(test)]
@@ -185,6 +94,11 @@ mod tests {
         assert_eq!(eval("3 * 5 * 2"), 30.into());
         assert_eq!(eval("1 / 0.5"), 2.into());
         assert_eq!(eval("2 * 1 / 3"), (2. * 1. / 3.).into());
+    }
+
+    #[test]
+    fn factorial() {
+        assert_eq!(eval("3 !"), 6.into());
     }
 
     #[test]
