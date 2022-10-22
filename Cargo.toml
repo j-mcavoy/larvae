@@ -18,7 +18,6 @@ members = [
 [dependencies]
 earlgrey = {version="0.3.2",features=[]}
 env_logger = "0.9.0"
-factorial = "0.2.1"
 float-pretty-print = "0.1.1"
 larvae_macros= { version = "*", path= "./macros"}
 lazy_static = "1.4.0"
@@ -30,3 +29,4 @@ pom = "3.2.0"
 regex = "1.5.4"
 rustyline = "9.1.2"
 shunting = "0.0.9"
+spfunc = "0.1.0"

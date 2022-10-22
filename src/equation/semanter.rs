@@ -2,8 +2,8 @@ use crate::core::{
     quantity::{Quantity, QuantityFloat},
     unit::UNITS_LOOKUP,
 };
-use factorial::Factorial;
 use log::debug;
+use spfunc::gamma::gamma;
 
 fn symbol_match(symbol: &str, token: &str) -> Quantity {
     let out = match symbol {
@@ -47,16 +47,11 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
         "factor -> - factor",    n[1].neg(),
         "power -> ufact",        n[0],
         "power -> ufact ^ factor",
-                                n[0].pow(n[2].try_into().unwrap()),
+                                 n[0].pow(n[2].try_into().unwrap()),
 
         "ufact -> group",        n[0],
-        "ufact -> ufact !",
-                                {
-                                    let float: f64 = n[0].try_into().unwrap();
-                                    let int: u64 = float as u64;
-                                    (int.factorial() as QuantityFloat).into()
-                                },
-        "quantity -> [n]",      n[0],
+        "ufact -> ufact !",      gamma::<f64>(TryInto::<QuantityFloat>::try_into(n[0]).unwrap() + 1.).into(),
+        "quantity -> [n]",       n[0],
         "quantity -> [n] units",
                                 Quantity::new(n[0].value, n[1].dimensions, n[1].units),
         "units -> unit",        n[0],
@@ -98,7 +93,7 @@ mod tests {
 
     #[test]
     fn factorial() {
-        assert_eq!(eval("3 !"), 6.into());
+        assert_eq!(eval("5 !"), 120.into());
     }
 
     #[test]

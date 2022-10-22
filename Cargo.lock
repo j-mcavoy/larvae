@@ -35,6 +35,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
+name = "cauchy"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ff11ddd2af3b5e80dd0297fee6e56ac038d9bdc549573cdb51bd6d2efe7f05e"
+dependencies = [
+ "num-complex",
+ "num-traits",
+ "rand",
+ "serde",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -177,15 +189,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "factorial"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6398219c33c5768705156b8a69c99c463a51847e2d3647f5adce32bb6e990b1c"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
 name = "fd-lock"
 version = "3.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -246,7 +249,6 @@ version = "0.1.0"
 dependencies = [
  "earlgrey",
  "env_logger",
- "factorial",
  "float-pretty-print",
  "larvae_macros",
  "lazy_static",
@@ -258,6 +260,7 @@ dependencies = [
  "regex",
  "rustyline 9.1.2",
  "shunting",
+ "spfunc",
 ]
 
 [[package]]
@@ -384,6 +387,17 @@ checksum = "a8903e5a29a317527874d0402f867152a3d21c908bb0b933e416c65e301d4c36"
 dependencies = [
  "memchr",
  "minimal-lexical",
+]
+
+[[package]]
+name = "num-complex"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ae39348c8bc5fbd7f40c727a9925f03517afd2ab27d46702108b6a7e5414c19"
+dependencies = [
+ "num-traits",
+ "rand",
+ "serde",
 ]
 
 [[package]]
@@ -565,6 +579,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
+name = "serde"
+version = "1.0.147"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d193d69bae983fc11a79df82342761dfbf28a99fc8d203dca4c3c1b590948965"
+
+[[package]]
 name = "shunting"
 version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -581,6 +601,17 @@ name = "smallvec"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
+
+[[package]]
+name = "spfunc"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88a453caefb216996e21861a3e6fea3d4318258414d8b727d00dbc40118bb13e"
+dependencies = [
+ "cauchy",
+ "num-complex",
+ "num-traits",
+]
 
 [[package]]
 name = "str-buf"
