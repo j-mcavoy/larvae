@@ -1,5 +1,5 @@
 [package]
-name = "larvae_cli"
+name = "larvae"
 version = "0.1.0"
 edition = "2021"
 description = "a super fast scientific calculator with dimensional analysis support"
