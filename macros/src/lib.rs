@@ -1,112 +1,14 @@
+mod unit_systems;
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::parse::{Parse, ParseStream, Result};
-use syn::{parse_macro_input, Ident, LitFloat, LitStr, Token};
-
-struct Unit {
-    name: LitStr,
-    abbrev: LitStr,
-    symbol: LitStr,
-    conversion_factor: LitFloat,
-}
-struct UnitSystems(Vec<UnitSystem>);
-struct UnitSystem {
-    dimension: LitStr,
-    units: Vec<Unit>,
-    dim_l: LitFloat,
-    dim_m: LitFloat,
-    dim_t: LitFloat,
-}
-
-// name, abbrev, symbol, 10^x
-const METRIC_PREFIXES: &[(&str, &str, &str, f64)] = &[
-    ("yotta", "Y", "Y", 24.),
-    ("zetta", "Z", "Z", 21.),
-    ("exa", "E", "E", 18.),
-    ("peta", "P", "P", 15.),
-    ("tera", "T", "T", 12.),
-    ("giga", "G", "G", 9.),
-    ("mega", "M", "M", 6.),
-    ("kilo", "k", "k", 3.),
-    ("hecto", "h", "h", 2.),
-    ("deca", "da", "da", 1.),
-    ("deci", "d", "d", -1.),
-    ("centi", "c", "c", -2.),
-    ("milli", "m", "m", -3.),
-    ("micro", "u", "μ", -6.),
-    ("nano", "n", "n", -9.),
-    ("pico", "p", "p", -12.),
-    ("femto", "f", "f", -15.),
-    ("atto", "a", "a", -18.),
-    ("zepto", "z", "z", -21.),
-    ("yocto", "y", "y", -24.),
-];
-//($dim:ident :
-//$($unit:ident $abbrev:ident $symbol:ident $d_l:tt $d_m:tt $d_t:tt),+
-//)
-impl Parse for UnitSystems {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let mut unit_systems = vec![];
-        while !input.is_empty() {
-            let dimension = input.parse()?;
-            let dim_l: LitFloat = input.parse()?;
-            let dim_m: LitFloat = input.parse()?;
-            let dim_t: LitFloat = input.parse()?;
-            input.parse::<Token![:]>()?;
-            let mut units = vec![];
-
-            while input.parse::<Token![,]>().is_err() {
-                let name: LitStr = input.parse()?;
-                let abbrev: LitStr = input.parse()?;
-                let symbol: LitStr = input.parse()?;
-                let conversion_factor = input.parse()?;
-                units.push(Unit {
-                    name: name.clone(),
-                    abbrev: abbrev.clone(),
-                    symbol: symbol.clone(),
-                    conversion_factor,
-                });
-                if input.parse::<Token![!]>().is_ok() {
-                    // metric flag
-                    for (pre, abr, sym, pow) in METRIC_PREFIXES {
-                        let name: LitStr =
-                            LitStr::new(&(pre.to_string() + &name.value()), dim_l.span());
-                        let symbol: LitStr =
-                            LitStr::new(&(sym.to_string() + &symbol.value()), dim_l.span());
-                        let abbrev: LitStr =
-                            LitStr::new(&(abr.to_string() + &abbrev.value()), dim_l.span());
-
-                        let conversion_factor =
-                            LitFloat::new(&format! {"1e{}", *pow}, dim_l.span());
-                        units.push(Unit {
-                            name,
-                            abbrev,
-                            symbol,
-                            conversion_factor,
-                        });
-                    }
-                }
-            }
-            unit_systems.push(UnitSystem {
-                dimension,
-                units,
-                dim_l,
-                dim_m,
-                dim_t,
-            });
-        }
-        Ok(UnitSystems(unit_systems))
-    }
-}
+use syn::{parse_macro_input, Ident, LitFloat, LitStr};
+use unit_systems::{UnitSystems, BASE_DIMENSIONS};
 
 fn str2ident(s: LitStr) -> Ident {
     Ident::new(&s.value(), Span::call_site())
 }
-
-const BASE_DIMENSIONS: &[&str] = &["length", "mass", "time"];
-
 #[proc_macro]
 pub fn dimensions(input: TokenStream) -> TokenStream {
     let uss = parse_macro_input!(input as UnitSystems);
@@ -166,50 +68,50 @@ pub fn dimensions(input: TokenStream) -> TokenStream {
         };
 
         mod_output = quote! (
-            #mod_output
+        #mod_output
 
-            use #dim_ident::#dim_enum;
-            pub mod #dim_ident {
-                use super::*;
-                use #dim_enum::*;
+        use #dim_ident::#dim_enum;
+        pub mod #dim_ident {
+            use super::*;
+            use #dim_enum::*;
 
-                #[allow(non_camel_case_types)]
-                #[derive(Debug, Clone, Copy, PartialEq)]
-                pub enum #dim_enum {
-                    #(#names_ident),*
-                }
-                impl Unit for #dim_enum {
-                    fn dimensions(&self) -> Dimensions {
-                        Dimensions {
-                            length: #dim_l,
-                            mass: #dim_m,
-                            time: #dim_t,
-                        }
-                    }
-                    fn abbrev(&self) -> &'static str {
-                        match self {
-                            #(#names_ident => #abbrevs),*
-                        }
-                    }
-                    fn name(&self) -> &'static str {
-                        match self {
-                            #(#names_ident => #names),*
-                        }
-                    }
-                    fn symbol(&self) -> &'static str {
-                        match self {
-                            #(#names_ident => #symbols),*
-                        }
-                    }
-                    fn conversion_factor(&self) -> StorageType {
-                        match self {
-                            #(#names_ident => #conversion_factors),*
-                        }
-                    }
-
-                    #q_units
-                }
+            #[allow(non_camel_case_types)]
+            #[derive(Debug, Clone, Copy, PartialEq)]
+            pub enum #dim_enum {
+                #(#names_ident),*
             }
+            impl Unit for #dim_enum {
+                fn dimensions(&self) -> Dimensions {
+                    Dimensions {
+                        length: #dim_l,
+                        mass: #dim_m,
+                        time: #dim_t,
+                    }
+                }
+                fn abbrev(&self) -> &'static str {
+                    match self {
+                        #(#names_ident => #abbrevs),*
+                    }
+                }
+                fn name(&self) -> &'static str {
+                    match self {
+                        #(#names_ident => #names),*
+                    }
+                }
+                fn symbol(&self) -> &'static str {
+                    match self {
+                        #(#names_ident => #symbols),*
+                    }
+                }
+                fn conversion_factor(&self) -> QuantityFloat {
+                    match self {
+                        #(#names_ident => #conversion_factors),*
+                    }
+                }
+
+                #q_units
+            }
+        }
         );
     }
 
