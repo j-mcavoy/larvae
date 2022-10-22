@@ -151,7 +151,6 @@ mod test {
                 length: 1.,
                 mass: 2.,
                 time: -3.,
-                ..Default::default()
             },
             ..Default::default()
         };

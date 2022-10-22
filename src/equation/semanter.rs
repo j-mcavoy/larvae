@@ -70,9 +70,6 @@ mod tests {
     use super::*;
     use crate::{core::dimension::Dimensions, core::quantity::Quantity, equation::parser::parser};
 
-    fn init() {
-        env_logger::init();
-    }
     #[inline]
     fn eval(input: &str) -> Quantity {
         debug!("input: {}", input);

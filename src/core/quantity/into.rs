@@ -28,10 +28,10 @@ mod tests {
     #[test]
     fn from_f64() {
         let expected = Quantity {
-            value: 3.14,
+            value: 123.456,
             ..Default::default()
         };
-        assert_eq!(expected, 3.14.into());
-        assert_eq!(expected, Quantity::from(3.14));
+        assert_eq!(expected, 123.456.into());
+        assert_eq!(expected, Quantity::from(123.456));
     }
 }
