@@ -31,6 +31,9 @@ fn grammar() -> Grammar {
         .terminal("!", |n| n == "!")
         .terminal("(", |n| n == "(")
         .terminal(")", |n| n == ")")
+        .terminal("ln", |n| n == "ln")
+        .terminal("log", |n| n == "log")
+        .terminal("sqrt", |n| n == "sqrt")
         .terminal("[->]", |n| n == "->")
         .terminal("unit", |n| UNITS_LOOKUP.contains_key(n))
         .rule("equation", &["expr"])
@@ -50,6 +53,9 @@ fn grammar() -> Grammar {
         .rule("ufact", &["ufact", "!"])
         .rule("group", &["quantity"])
         .rule("group", &["(", "expr", ")"])
+        .rule("group", &["log", "group"])
+        .rule("group", &["ln", "group"])
+        .rule("group", &["sqrt", "group"])
         .rule("quantity", &["[n]"])
         .rule("quantity", &["[n]", "units"])
         .rule("units", &["unit"])
@@ -80,8 +86,6 @@ fn grammar() -> Grammar {
     .terminal("(", |n| n == "(")
     .terminal(")", |n| n == ")")
     //// functions
-    .terminal("ln", |n| n == "ln")
-    .terminal("log", |n| n == "log")
     .terminal("sqrt", |n| n == "sqrt")
     .terminal("num", |n| f64::from_str(n).is_ok())
     // rules
@@ -110,9 +114,6 @@ fn grammar() -> Grammar {
     .rule("quantity", &["num"])
     .rule("quantity", &["num", "units"])
     .rule("quantity", &["expr", "units"])
-    .rule("group", &["log", "group"])
-    .rule("group", &["ln", "group"])
-    .rule("group", &["sqrt", "group"])
     .rule("num", &["e"])
     .rule("num", &["pi"])
     .rule("unit", &["unit"])
@@ -172,6 +173,29 @@ mod tests {
         assert!(parse_test("-1 m"));
         assert!(parse_test("-1 m / s"));
         assert!(parse_test("-1 m / s ^ 2"));
+    }
+
+    #[test]
+    fn factorial() {
+        assert!(parse_test("5 !"));
+    }
+
+    #[test]
+    fn log() {
+        assert!(parse_test("log ( 100 )"));
+        assert!(parse_test("log 100"));
+    }
+
+    #[test]
+    fn ln() {
+        assert!(parse_test("ln ( 100 )"));
+        assert!(parse_test("ln 100"));
+    }
+
+    #[test]
+    fn sqrt() {
+        assert!(parse_test("sqrt ( 100 )"));
+        assert!(parse_test("sqrt 100"));
     }
 
     #[test]

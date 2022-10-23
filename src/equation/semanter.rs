@@ -58,6 +58,9 @@ pub fn semanter<'a>() -> earlgrey::EarleyForest<'a, Quantity> {
         "units -> units unit",  n[0] * n[1],
         "group -> quantity",    n[0],
         "group -> ( expr )",    n[1],
+        "group -> sqrt group",   TryInto::<QuantityFloat>::try_into(n[1]).expect("Quantity is not scalar").sqrt().into(),
+        "group -> log group",   TryInto::<QuantityFloat>::try_into(n[1]).expect("Quantity is not scalar").log10().into(),
+        "group -> ln group",    TryInto::<QuantityFloat>::try_into(n[1]).expect("Quantity is not scalar").ln().into(),
         "equation -> expr",     n[0],
         "equation -> expr [->] units",
                                 n[0].set_units(&n[2].units)
@@ -91,6 +94,24 @@ mod tests {
     #[test]
     fn factorial() {
         assert_eq!(eval("5 !"), 119.99999999999976.into());
+    }
+
+    #[test]
+    fn log() {
+        assert_eq!(eval("log ( 100 )"), 2.into());
+        assert_eq!(eval("log 100"), 2.into());
+    }
+
+    #[test]
+    fn ln() {
+        assert_eq!(eval("ln ( 100 )"), 4.605170185988092.into());
+        assert_eq!(eval("ln 100"), 4.605170185988092.into());
+    }
+
+    #[test]
+    fn sqrt() {
+        assert_eq!(eval("sqrt ( 100 )"), 10.into());
+        assert_eq!(eval("sqrt 100"), 10.into());
     }
 
     #[test]
