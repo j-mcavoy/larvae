@@ -1,4 +1,3 @@
-
 use syn::{LitFloat, LitStr};
 
 mod parse;
